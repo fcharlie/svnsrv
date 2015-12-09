@@ -28,5 +28,11 @@ $(PROJECTNAME): $(OBJECTS)
 $(OBJECTS):%.o:%.cc
 	$(CXX) $(CXXFLAGS) $(ADDINCDIR) -c $< -o $@
 
+install:$(PROJECTNAME) ../config/svnsrv.toml ../config/router.toml
+	cp $(PROJECTNAME) ../bin
+	cp ../config/svnsrv.toml ../bin
+	cp  ../config/router.toml ../bin
+
+
 clean:
 	rm *.o svnsrv

@@ -1,0 +1,17 @@
+#this is ignore file
+*.o
+*.a
+a.out
+*.exe
+*.dll
+*.obj
+*.res
+*.pdb
+a.out
+*.swp
+.clang_complete
+*.s
+bin/*.toml
+bin/svnsrv
+src/svnsrv
+

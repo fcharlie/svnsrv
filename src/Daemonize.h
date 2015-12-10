@@ -1,5 +1,5 @@
 /*
-* Daemon.cc
+* Daemonize.h
 * oschina.net subversion proxy service
 * author: Force.Charlie
 * Date: 2015.11
@@ -8,8 +8,9 @@
 #ifndef SVNSRV_DAEMON_H
 #define SVNSRV_DAEMON_H
 
-int CreateDaemon();
-int RegisterSignalHandle(bool isDaemon);
+int Daemonize();
+int DaemonSignalMethod();
+int SIGINTRegister();
 void CrashHandle(const char *data, int size);
 bool StoreDaemonPID(const std::string &pidFile);
 bool StopDaemonService(const std::string &pidFile);

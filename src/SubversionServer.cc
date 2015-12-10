@@ -12,6 +12,7 @@
 #include <utility>
 #include <thread>
 #include <mutex>
+#include <stdexcept>
 #include "svnsrv.h"
 #include "SubversionServer.hpp"
 #include "SubversionSession.hpp"
@@ -112,9 +113,9 @@ private:
 };
 
 int SubversionServerInitialize(const NetworkServerArgs &networkArgs) {
-  klogger::Log(klogger::kInfo, "Subversion Server Running");
+  klogger::Log(klogger::kInfo, "svnsrv running");
   SubversionServer subversionServer(networkArgs);
   subversionServer.run();
-  klogger::Log(klogger::kInfo, "Subversion Server shutdown");
+  klogger::Log(klogger::kInfo, "svnsrv shutdown");
   return 0;
 }

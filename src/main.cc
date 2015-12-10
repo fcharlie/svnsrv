@@ -17,7 +17,7 @@
 #include "klog.h"
 #include "version.h"
 #include "svnsrv.h"
-#include "Daemon.h"
+#include "Daemonize.h"
 #include "SubversionServer.hpp"
 #include "FowardCompatible.hpp"
 extern FowardDiscoverManager fowardDiscoverManager;
@@ -81,11 +81,21 @@ int PrintUsage() {
 
 int ProcessSignalArgs(const char *signame, const LauncherArgs &lanucherAgrs) {
   if (strcmp(signame, "stop") == 0) {
-    return StopDaemonService(lanucherAgrs.pidFile) ? kRequireExit
-                                                   : kKillProcessFailed;
+    auto b = StopDaemonService(lanucherAgrs.pidFile);
+    if (!b) {
+      printf("Cannot kill svnsrv, maybe svnsrv is not running.\n");
+    } else {
+      printf("Kill svnsrv success.\n");
+    }
+    return b ? kRequireExit : kKillProcessFailed;
   } else if (strcmp(signame, "restart") == 0) {
-    return RestartDaemonService(lanucherAgrs.pidFile) ? kRequireContinue
-                                                      : kKillProcessFailed;
+    auto b = RestartDaemonService(lanucherAgrs.pidFile);
+    if (!b) {
+      printf("Cannot kill svnsrv, maybe svnsrv is not running.\n");
+    } else {
+      printf("Have informed svnsrv restart\n");
+    }
+    return b ? kRequireContinue : kKillProcessFailed;
   }
   printf("Unsupported signal: %s\n", signame);
   return kArgumentError;
@@ -207,23 +217,19 @@ int main(int argc, char **argv) {
   if (version)
     return PrintVersion(quiet);
   if (!ParseServiceProfile(cfile, networkArgs, launcherArgs)) {
-    printf("Error:svnsrv cannot load svnsrv.toml ,please check your file: %s\n",
+    printf("Cannot parse svnsrv.toml ,please check your file: %s\n",
            cfile == nullptr ? "path/to/svnsrv/./svnsrv.toml" : cfile);
-    return 1;
+    return -1;
   }
   klogger::InitializeKlogger(launcherArgs.logAccess.c_str(),
                              launcherArgs.logError.c_str());
   if (signame) {
-    auto result = ProcessSignalArgs(signame, launcherArgs);
-    if (result != kRequireContinue)
-      return result;
-    // daemon = true;
+    return ProcessSignalArgs(signame, launcherArgs);
   }
-  if (debug) {
-    //// do some thing
-  }
+  (void)debug;
   if (daemon) {
-    if (CreateDaemon() != 0) {
+    DaemonSignalMethod();
+    if (Daemonize() != 0) {
       klogger::Log(klogger::kError, "cannot create svnsrv daemon!");
       klogger::FileFlush();
       return -1;
@@ -238,7 +244,7 @@ int main(int argc, char **argv) {
                  getpid());
     klogger::FileFlush();
   } else {
-    RegisterSignalHandle(false);
+    SIGINTRegister();
   }
 
   klogger::Log(klogger::kInfo, "Listener address: %s Port: %d",

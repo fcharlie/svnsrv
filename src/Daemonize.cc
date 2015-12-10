@@ -1,5 +1,5 @@
 /*
-* Daemon.cc
+* Daemonize.cc
 * oschina.net subversion proxy service
 * author: Force.Charlie
 * Date: 2015.11
@@ -17,10 +17,10 @@
 #include <string>
 #include <fstream>
 #include "klog.h"
-#include "Daemon.h"
+#include "Daemonize.h"
 #define isEffective(c) ((c >= '0' && c <= '9') || c == ' ' || c == 0)
 
-int CreateDaemon() {
+int Daemonize() {
   int fd;
   switch (fork()) {
   case -1:
@@ -92,7 +92,8 @@ bool StopDaemonService(const std::string &pidFile) {
   pid_t id;
   int l = 1;
   if (LookupDaemonPID(pidFile, id)) {
-    l = kill(id, SIGQUIT);
+    printf("kill svnsrv daemon ,pid: %d\n", id);
+    l = kill(id, SIGUSR1);
   } else {
     return false;
   }
@@ -105,7 +106,7 @@ bool RestartDaemonService(const std::string &pidFile) {
   int l = 1;
   if (LookupDaemonPID(pidFile, id)) {
     unlink(pidFile.c_str());
-    l = kill(id, SIGHUP);
+    l = kill(id, SIGUSR2);
   } else {
     return false;
   }
@@ -120,14 +121,33 @@ void CrashHandle(const char *data, int size) {
   // LOG(ERROR) << str;
 }
 
-void SIGINTMethod(int sig) {
-  klogger::Log(klogger::kInfo, "Subversion Server shutdown ");
+void SignalDaemonKill(int sig) {
+  /////
+  klogger::Log(klogger::kInfo, "svnsrv daemon shutdown");
   klogger::FileFlush();
   _exit(0);
 }
 
-int RegisterSignalHandle(bool isDaemon) {
-  if (!isDaemon)
-    signal(SIGINT, SIGINTMethod);
+void SignalDaemonRestart(int sig) {
+  klogger::Log(klogger::kInfo, "svnsrv restart now");
+  klogger::FileFlush();
+  _exit(0);
+}
+
+void SignalProcessKill(int sig) {
+  klogger::Log(klogger::kInfo, "svnsrv shutdown");
+  klogger::FileFlush();
+  _exit(0);
+}
+
+int SIGINTRegister() {
+  signal(SIGINT, SignalProcessKill);
+  return 0;
+}
+
+int DaemonSignalMethod() {
+  ///
+  signal(SIGUSR1, SignalDaemonKill);
+  signal(SIGUSR2, SignalDaemonRestart);
   return 0;
 }

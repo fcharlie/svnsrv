@@ -15,7 +15,7 @@ ADDLIB= -lboost_coroutine -lboost_date_time -lboost_context -lboost_system  -lun
 
 PROJECTNAME=svnsrv
 
-OBJECTS=main.o Daemon.o SubversionServer.o SubversionSession.o SubversionSyntactic.o URLTokenizer.o \
+OBJECTS=main.o Daemonize.o SubversionServer.o SubversionSession.o SubversionSyntactic.o URLTokenizer.o \
 SubversionStorage.o FowardCompatible.o klog.o
 
 

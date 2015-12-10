@@ -79,7 +79,8 @@ bool LookupDaemonPID(const std::string &pidFile, pid_t &id) {
 
 bool StoreDaemonPID(const std::string &pidFile) {
   FILE *fp = nullptr;
-  if ((fp = fopen(pidFile.c_str(), "w+"))) {
+  if ((fp = fopen(pidFile.c_str(), "w+")) == nullptr) {
+    klogger::Log(klogger::kFatal, "cannot open %s", pidFile.c_str());
     return false;
   }
   fprintf(fp, "%d", getpid());
@@ -88,13 +89,27 @@ bool StoreDaemonPID(const std::string &pidFile) {
 }
 
 bool StopDaemonService(const std::string &pidFile) {
-  ///
-  return false;
+  pid_t id;
+  int l = 1;
+  if (LookupDaemonPID(pidFile, id)) {
+    l = kill(id, SIGQUIT);
+  } else {
+    return false;
+  }
+  unlink(pidFile.c_str());
+  return l == 0;
 }
 
 bool RestartDaemonService(const std::string &pidFile) {
-  ///
-  return false;
+  pid_t id;
+  int l = 1;
+  if (LookupDaemonPID(pidFile, id)) {
+    unlink(pidFile.c_str());
+    l = kill(id, SIGHUP);
+  } else {
+    return false;
+  }
+  return l == 0;
 }
 
 void CrashHandle(const char *data, int size) {
@@ -111,7 +126,7 @@ void SIGINTMethod(int sig) {
   _exit(0);
 }
 
-int BindSignal(bool isDaemon) {
+int RegisterSignalHandle(bool isDaemon) {
   if (!isDaemon)
     signal(SIGINT, SIGINTMethod);
   return 0;

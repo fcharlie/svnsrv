@@ -22,6 +22,13 @@
 #include "FowardCompatible.hpp"
 extern FowardDiscoverManager fowardDiscoverManager;
 
+enum ProcessSignalFlow {
+  kRequireExit = 0,
+  kKillProcessFailed = 1,
+  kRequireContinue = 2,
+  kArgumentError
+};
+
 static const char *kUsage =
     "OVERVIEW: svnsrv subversion proxy service\n"
     "Usage: svnsrv [options] <input> \n"
@@ -74,14 +81,14 @@ int PrintUsage() {
 
 int ProcessSignalArgs(const char *signame, const LauncherArgs &lanucherAgrs) {
   if (strcmp(signame, "stop") == 0) {
-    return StopDaemonService(lanucherAgrs.pidFile) ? 0 : -1;
+    return StopDaemonService(lanucherAgrs.pidFile) ? kRequireExit
+                                                   : kKillProcessFailed;
   } else if (strcmp(signame, "restart") == 0) {
-    return RestartDaemonService(lanucherAgrs.pidFile) ? 0 : -1;
-  } else {
-    printf("Unsupported signal: %s\n", signame);
-    return 1;
+    return RestartDaemonService(lanucherAgrs.pidFile) ? kRequireContinue
+                                                      : kKillProcessFailed;
   }
-  return 0;
+  printf("Unsupported signal: %s\n", signame);
+  return kArgumentError;
 }
 
 bool ParseServiceProfile(const char *cfile, NetworkServerArgs &na,
@@ -204,22 +211,36 @@ int main(int argc, char **argv) {
            cfile == nullptr ? "path/to/svnsrv/./svnsrv.toml" : cfile);
     return 1;
   }
-  if (signame)
-    return ProcessSignalArgs(signame, launcherArgs);
+  klogger::InitializeKlogger(launcherArgs.logAccess.c_str(),
+                             launcherArgs.logError.c_str());
+  if (signame) {
+    auto result = ProcessSignalArgs(signame, launcherArgs);
+    if (result != kRequireContinue)
+      return result;
+    // daemon = true;
+  }
   if (debug) {
     //// do some thing
   }
   if (daemon) {
     if (CreateDaemon() != 0) {
-      printf("create daemon failed \n");
+      klogger::Log(klogger::kError, "cannot create svnsrv daemon!");
+      klogger::FileFlush();
       return -1;
     }
-    StoreDaemonPID(launcherArgs.pidFile);
+    if (!StoreDaemonPID(launcherArgs.pidFile)) {
+      klogger::Log(klogger::kError, "cannot store svnsrv daemon pid %d",
+                   getpid());
+      klogger::FileFlush();
+      return 1;
+    }
+    klogger::Log(klogger::kInfo, "svnsrv run as daemon success,pid: %d",
+                 getpid());
+    klogger::FileFlush();
   } else {
-    BindSignal(false);
+    RegisterSignalHandle(false);
   }
-  klogger::InitializeKlogger(launcherArgs.logAccess.c_str(),
-                             launcherArgs.logError.c_str());
+
   klogger::Log(klogger::kInfo, "Listener address: %s Port: %d",
                networkArgs.address.c_str(), networkArgs.port);
   return SubversionServerInitialize(networkArgs);

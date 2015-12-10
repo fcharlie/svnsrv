@@ -9,7 +9,7 @@
 #define SVNSRV_DAEMON_H
 
 int CreateDaemon();
-int BindSignal(bool isDaemon);
+int RegisterSignalHandle(bool isDaemon);
 void CrashHandle(const char *data, int size);
 bool StoreDaemonPID(const std::string &pidFile);
 bool StopDaemonService(const std::string &pidFile);

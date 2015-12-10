@@ -16,6 +16,7 @@
 #include <fcntl.h>
 #include <string>
 #include <fstream>
+#include <vector>
 #include "klog.h"
 #include "Daemonize.h"
 #define isEffective(c) ((c >= '0' && c <= '9') || c == ' ' || c == 0)
@@ -121,17 +122,41 @@ void CrashHandle(const char *data, int size) {
   // LOG(ERROR) << str;
 }
 
+extern pid_t daemon_child;
+
 void SignalDaemonKill(int sig) {
-  /////
   klogger::Log(klogger::kInfo, "svnsrv daemon shutdown");
   klogger::FileFlush();
   _exit(0);
 }
-
+void SubversionStopCallback();
 void SignalDaemonRestart(int sig) {
-  klogger::Log(klogger::kInfo, "svnsrv restart now");
+  klogger::Log(klogger::kInfo, "stop older svnsrv daemon socket accpter");
+  SubversionStopCallback();
+  char filename[32];
+  snprintf(filename, 32, "/proc/%d/cmdline", getpid());
+  char buffer[4096] = {0};
+  auto fd = open(filename, O_RDONLY);
+  if (fd < 0) {
+    perror("open:");
+    klogger::Log(klogger::kFatal, "cannot open /proc/self/cmdline");
+    klogger::FileFlush();
+    _exit(-1);
+  }
+  auto ret = read(fd, buffer, 4096);
+  std::vector<char *> Argv_;
+  Argv_.push_back(buffer);
+  for (auto i = 0; i < ret; i++) {
+    if (buffer[i] == 0 && i + 1 < ret) {
+      Argv_.push_back(&buffer[++i]);
+    }
+  }
+  klogger::Log(klogger::kInfo, "start new process, Argv size: %d,First Arg: %s",
+               Argv_.size(), Argv_.at(0));
   klogger::FileFlush();
-  _exit(0);
+  execvp(Argv_[0], Argv_.data());
+  klogger::Log(klogger::kFatal, "cannot start svnsrv");
+  _exit(-1);
 }
 
 void SignalProcessKill(int sig) {

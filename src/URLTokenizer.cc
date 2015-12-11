@@ -12,12 +12,13 @@
 **/
 
 bool URLTokenizer(const char *u, SubversionURL &us) {
+  us.origin.assign(u);
   if (u == nullptr)
     return false;
   int depth = 0;
   us.path.push_back('/');
   std::string str_port;
-  bool bPort=false;
+  bool bPort = false;
   for (; *u; u++) {
     if (*u == '/') {
       depth++;
@@ -34,13 +35,13 @@ bool URLTokenizer(const char *u, SubversionURL &us) {
       return false;
       break;
     case 2:
-      if(*u==':'){
-        bPort=true;
+      if (*u == ':') {
+        bPort = true;
         continue;
       }
-      if(bPort){
+      if (bPort) {
         str_port.push_back(*u);
-      }else{
+      } else {
         us.host.push_back(*u);
       }
       break;
@@ -62,12 +63,11 @@ bool URLTokenizer(const char *u, SubversionURL &us) {
   // std::cout << depth << std::endl;
   if (depth <= 3)
     return false;
-  if(str_port.empty()){
-    us.port=3690;
-  }else{
-     char *c;
-     us.port=strtol(str_port.c_str(),&c,10);
+  if (str_port.empty()) {
+    us.port = 3690;
+  } else {
+    char *c;
+    us.port = strtol(str_port.c_str(), &c, 10);
   }
-  us.origin.assign(u);
   return true;
 }

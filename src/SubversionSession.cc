@@ -67,15 +67,19 @@ void SubversionSession::start() {
   }
   auto us = eca.getSubversionURL();
   SubversionStorageNode node;
-  if (!DiscoverStorageNode(us, node) || node.address.empty()) {
-    klogger::Log(klogger::kError, "Failed to query the backend server address");
-    sendError(200042, "Failed to query the backend server address",
-              sizeof("Failed to query the backend server address") - 1);
+  if (!DiscoverStorageNode(us, node)) {
+    klogger::Log(klogger::kError,
+                 "Unable to get storage machine address, URL %s",
+                 us.origin.c_str());
+    const char msg[] =
+        "Unable to get storage machine address, maybe you typed the wrong URL";
+    sendError(200042, msg, sizeof(msg) - 1);
     return;
   }
-  klogger::Access("Remote: %s Storage: %s SubversionURL: %s",
+  klogger::Access("Remote %s Storage %s URL %s Agent %s",
                   socket_.remote_endpoint().address().to_string().c_str(),
-                  node.address.c_str(), eca.getBaseURL().c_str());
+                  node.address.c_str(), eca.getBaseURL().c_str(),
+                  eca.getUserAgent().c_str());
   if (node.address.empty())
     return;
   tcp::endpoint backend_point(
@@ -84,8 +88,8 @@ void SubversionSession::start() {
   if (e) {
     klogger::Log(klogger::kError, "Storage is not available,address: %s",
                  node.address.c_str());
-    sendError(200042, "Backend is not available",
-              sizeof("Backend is not available") - 1);
+    sendError(200042, "Storage is not available",
+              sizeof("Storage is not available") - 1);
     return;
   }
   IsEnabledBackend = true;

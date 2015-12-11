@@ -3,15 +3,22 @@
 CC?=clang
 CXX?=clang++
 
+BUILDTYPE?=Release
+
+ifeq ($(BUILDTYPE),Debug)
+ADDRESSFIX= -fsanitize=address -fno-omit-frame-pointer
+ADDRESSLINK= -fsanitize=address
+endif
+
 ifeq ($(CXX),clang++)
-CXXFLAGS= -std=c++11 -g -Wall  -Wunused-variable -pedantic -Weffc++ \
--Wno-gnu-anonymous-struct -Wno-unused-local-typedef -Wno-c99-extensions
+CXXFLAGS= -std=c++11 -g -Wall  -Wunused-variable -pedantic -Weffc++ -Wno-gnu-anonymous-struct \
+-Wno-unused-local-typedef -Wno-c99-extensions $(ADDRESSFIX)
 else
-CXXFLAGS= -std=c++11 -g -Wall  -Wunused-variable
+CXXFLAGS= -std=c++11 -g -Wall  -Wunused-variable $(ADDRESSFIX)
 endif
 CFLAGS= -g -Wunused-variable -Wimplicit-function-declaration
 
-ADDLIB= -lboost_coroutine -lboost_date_time -lboost_context -lboost_system  -lunwind -lpthread
+ADDLIB= -lboost_coroutine -lboost_date_time -lboost_context -lboost_system  -lboost_thread -lunwind -lpthread
 
 PROJECTNAME=svnsrv
 
@@ -23,7 +30,7 @@ all:$(PROJECTNAME)
 
 
 $(PROJECTNAME): $(OBJECTS)
-	$(CXX) $(ADDLIBDIR) $(OBJECTS)  $(ADDLIB) -o $@
+	$(CXX) $(ADDLIBDIR) $(ADDRESSLINK) $(OBJECTS)  $(ADDLIB) -o $@
 
 $(OBJECTS):%.o:%.cc
 	$(CXX) $(CXXFLAGS) $(ADDINCDIR) -c $< -o $@

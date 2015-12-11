@@ -14,13 +14,13 @@ address="192.168.1.12"
 enbale=true
 [[Host.Content]]
 range="B~D"
-address="192.168.1.13"
+address="192.168.1.12"
 enbale=true
 [[Host.Content]]
 range="E~Zz"
-address="192.168.1.14"
+address="192.168.1.12"
 enbale=true
 [[Host.Content]]
 range="aA~zz"
-address="192.168.1.15"
+address="192.168.1.12"
 enbale=true

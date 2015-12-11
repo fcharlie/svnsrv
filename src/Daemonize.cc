@@ -131,11 +131,16 @@ void SignalDaemonKill(int sig) {
 }
 void SubversionStopCallback();
 void SignalDaemonRestart(int sig) {
-  klogger::Log(klogger::kInfo, "stop older svnsrv daemon socket accpter");
+  klogger::Log(klogger::kInfo, "stop svnsrv daemon socket accpter");
   SubversionStopCallback();
+  char selfPath[4096];
+  auto sz = readlink("/proc/self/exe", selfPath, 4095);
+  if (sz == 0)
+    return;
+  selfPath[sz] = 0;
   char filename[32];
   snprintf(filename, 32, "/proc/%d/cmdline", getpid());
-  char buffer[4096] = {0};
+  char cmdline[4096] = {0};
   auto fd = open(filename, O_RDONLY);
   if (fd < 0) {
     perror("open:");
@@ -143,19 +148,28 @@ void SignalDaemonRestart(int sig) {
     klogger::FileFlush();
     _exit(-1);
   }
-  auto ret = read(fd, buffer, 4096);
+  auto ret = read(fd, cmdline, 4096);
   std::vector<char *> Argv_;
-  Argv_.push_back(buffer);
+  Argv_.push_back(cmdline);
   for (auto i = 0; i < ret; i++) {
-    if (buffer[i] == 0 && i + 1 < ret) {
-      Argv_.push_back(&buffer[++i]);
+    if (cmdline[i] == 0 && i + 1 < ret) {
+      Argv_.push_back(&cmdline[++i]);
     }
   }
   klogger::Log(klogger::kInfo, "start new process, Argv size: %d,First Arg: %s",
                Argv_.size(), Argv_.at(0));
   klogger::FileFlush();
-  execvp(Argv_[0], Argv_.data());
-  klogger::Log(klogger::kFatal, "cannot start svnsrv");
+  switch (fork()) {
+  case -1:
+    exit(-1);
+  case 0:
+    exit(0);
+    break;
+  default:
+    break;
+  }
+  auto hr = execvp(selfPath, Argv_.data());
+  klogger::Log(klogger::kFatal, "cannot start svnsrv,result: %d", hr);
   _exit(-1);
 }
 

@@ -61,7 +61,7 @@ void SubversionSession::start() {
   ExchangeCapabilities eca;
   if (!eca.Parse(clt_buffer_, greetingLength)) {
     klogger::Log(klogger::kError, "Bad Network data,Address: %s",
-                 socket_.remote_endpoint().address());
+                 socket_.remote_endpoint().address().to_string().c_str());
     sendError(210004, "Bad Network data", sizeof("Bad Network data") - 1);
     return;
   }

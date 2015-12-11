@@ -77,6 +77,7 @@ public:
 #define InitializeKlogger Klogger::instance().init ///;
 #define Access Klogger::instance().access          ///;
 #define Log Klogger::instance().log
+#define Move Klogger::instance().task
 #define FileFlush Klogger::instance().fflushE ////
 #define KLOGGER_VERSION 1
 }

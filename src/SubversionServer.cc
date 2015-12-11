@@ -13,6 +13,7 @@
 #include <thread>
 #include <mutex>
 #include <stdexcept>
+#include <boost/thread.hpp>
 #include "svnsrv.h"
 #include "SubversionServer.hpp"
 #include "SubversionSession.hpp"
@@ -34,11 +35,14 @@ public:
     }
   }
   void run() {
-    std::vector<std::shared_ptr<std::thread>> threads;
+    std::vector<std::shared_ptr<boost::thread>> threads;
     for (auto &it : io_services_) {
-      std::shared_ptr<std::thread> thread(
-          new std::thread(boost::bind(&boost::asio::io_service::run, it)));
+      std::shared_ptr<boost::thread> thread(
+          new boost::thread(boost::bind(&boost::asio::io_service::run, it)));
+      // tidvs.push_back(thread->get_id());
       threads.push_back(thread);
+      //      threads.push_back(std::make_shared<std::thread>(boost::bind(&boost::asio::io_service::run,
+      //      it)));
     }
     for (auto &t : threads) {
       t->join();
@@ -52,7 +56,7 @@ public:
 
   boost::asio::io_service &get_io_service() {
     // printf("get io service\n");
-    std::unique_lock<std::mutex> lock(mtx);
+    // std::unique_lock<std::mutex> lock(mtx);
     boost::asio::io_service &io_service = *io_services_[next_io_service_];
     ++next_io_service_;
     if (next_io_service_ == io_services_.size()) {
@@ -64,9 +68,10 @@ public:
 private:
   typedef std::shared_ptr<boost::asio::io_service> io_service_ptr;
   typedef std::shared_ptr<boost::asio::io_service::work> work_ptr;
-  typedef std::shared_ptr<std::thread> thread_ptr;
+  // typedef std::shared_ptr<std::thread> thread_ptr;
   std::mutex mtx;
   std::vector<io_service_ptr> io_services_;
+  // std::vector<boost::thread::id> tidvs;
   std::vector<work_ptr> work_;
   std::size_t next_io_service_;
 };
@@ -78,6 +83,8 @@ SubversionServer *context = nullptr;
 **/
 class SubversionServer {
 public:
+  SubversionServer(const SubversionServer &) = delete;
+  SubversionServer &operator=(const SubversionServer &) = delete;
   explicit SubversionServer(const NetworkServerArgs &networkArgs)
       : io_service_pool_(networkArgs.poolSize),
         acceptor_(io_service_pool_.get_io_service()) {
@@ -89,6 +96,13 @@ public:
     acceptor_.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
     acceptor_.bind(endpoint);
     acceptor_.listen();
+    // boost::asio::deadline_timer timer(io_service_pool_.get_io_service(),
+    //                                   boost::posix_time::seconds(10));
+    // timer.async_wait([this](boost::system::error_code ec) {
+    //   ///
+    //   klogger::Log(klogger::kDebug, "Debug Timer: %d", ec);
+    //   klogger::Move();
+    // });
     start_accept();
   }
   ~SubversionServer() { context = nullptr; }
@@ -108,8 +122,6 @@ private:
       new_session_->start();
       klogger::FileFlush();
       start_accept();
-      // new_session_.reset(new
-      // SubversionSession(io_service_pool_.get_io_service()));
     }
   }
   io_service_pool io_service_pool_;

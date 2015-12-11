@@ -8,11 +8,7 @@
 #include <cstring>
 #include <ctime>
 #include <cstdarg>
-#include <thread>
 #include <chrono>
-#include <iomanip>
-#include <unistd.h>
-#include <pthread.h>
 #include "klog.h"
 using namespace klogger;
 
@@ -28,13 +24,13 @@ Klogger &Klogger::instance() {
 Klogger::Klogger() { id = getpid(); }
 
 Klogger::~Klogger() {
-  if (logError != nullptr && logError != stderr) {
-    fflush(logError);
-    fclose(logError);
-  }
   if (logAccess != nullptr && logAccess != stdout) {
     fflush(logAccess);
     fclose(logAccess);
+  }
+  if (logError != nullptr && logError != stderr) {
+    fflush(logError);
+    fclose(logError);
   }
 }
 
@@ -141,7 +137,7 @@ void Klogger::log(KloggerLevel level, const char *fmt, ...) {
   auto tm = std::localtime(&t);
   auto len = snprintf(
       buffer, 4095, "[%s] Process: %d Thread: %zu Time: %d/%d/%d %s %d:%d:%d ",
-      leveMessage[level], id, tid, (1900 + tm->tm_year), tm->tm_mon,
+      leveMessage[level], id, tid, (1900 + tm->tm_year), tm->tm_mon + 1,
       tm->tm_mday, wday[tm->tm_wday], tm->tm_hour, tm->tm_min, tm->tm_sec);
   char *p = buffer + len;
   size_t l = 4095 - len;

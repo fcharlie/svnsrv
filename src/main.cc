@@ -247,7 +247,7 @@ int main(int argc, char **argv) {
     SIGINTRegister();
   }
 
-  klogger::Log(klogger::kInfo, "Listener address: %s Port: %d",
-               networkArgs.address.c_str(), networkArgs.port);
+  // klogger::Log(klogger::kInfo, "Listener address: %s Port: %d",
+  //              networkArgs.address.c_str(), networkArgs.port);
   return SubversionServerInitialize(networkArgs);
 }

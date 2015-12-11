@@ -68,6 +68,7 @@ void SubversionSession::start() {
   auto us = eca.getSubversionURL();
   SubversionStorageNode node;
   if (!DiscoverStorageNode(us, node) || node.address.empty()) {
+    klogger::Log(klogger::kError, "Failed to query the backend server address");
     sendError(200042, "Failed to query the backend server address",
               sizeof("Failed to query the backend server address") - 1);
     return;
@@ -81,6 +82,8 @@ void SubversionSession::start() {
       boost::asio::ip::address::from_string(node.address), node.port);
   backend_.connect(backend_point, e);
   if (e) {
+    klogger::Log(klogger::kError, "Storage is not available,address: %s",
+                 node.address.c_str());
     sendError(200042, "Backend is not available",
               sizeof("Backend is not available") - 1);
     return;

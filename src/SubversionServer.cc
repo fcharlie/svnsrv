@@ -137,6 +137,9 @@ void SubversionStopCallback() {
 int SubversionServerInitialize(const NetworkServerArgs &networkArgs) {
   klogger::Log(klogger::kInfo, "svnsrv running");
   SubversionServer subversionServer(networkArgs);
+  klogger::Log(
+      klogger::kInfo, "Listener address: %s Port: %d Thread Counts: %d",
+      networkArgs.address.c_str(), networkArgs.port, networkArgs.poolSize);
   subversionServer.run();
   klogger::Log(klogger::kInfo, "svnsrv shutdown");
   return 0;

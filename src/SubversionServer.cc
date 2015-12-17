@@ -121,8 +121,8 @@ private:
     if (!e) {
       new_session_->start();
       klogger::FileFlush();
-      start_accept();
     }
+    start_accept();
   }
   io_service_pool io_service_pool_;
   SubversionSessionPtr new_session_;

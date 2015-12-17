@@ -18,7 +18,7 @@ CXXFLAGS= -std=c++11 -g -Wall  -Wunused-variable $(ADDRESSFIX)
 endif
 CFLAGS= -g -Wunused-variable -Wimplicit-function-declaration
 
-ADDLIB= -lboost_coroutine -lboost_date_time -lboost_context -lboost_system  -lboost_thread -lunwind -lpthread
+ADDLIB= -lboost_system -lboost_thread -lpthread
 
 PROJECTNAME=svnsrv
 

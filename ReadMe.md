@@ -39,8 +39,7 @@ svnsrv 依赖 Boost ，使用 C++ 11 编译器，所以你必须要安装 GCC 4.
 
 在 Ubuntu 上安装依赖：    
 ```sh
-sudo apt-get install libboost-dev libboost-context-dev libboost-system-dev libboost-thread-dev \
-libboost-coroutine-dev libboost-date-time-dev libunwind8-dev
+sudo apt-get install libboost-dev libboost-system-dev libboost-thread-dev 
 ```
 构建非常简单：
 >cd src && make

@@ -3,7 +3,7 @@
 CC?=clang
 CXX?=clang++
 
-BUILDTYPE?=Release
+BUILDTYPE?=Debug
 
 ifeq ($(BUILDTYPE),Debug)
 ADDRESSFIX= -fsanitize=address -fno-omit-frame-pointer
@@ -18,7 +18,10 @@ CXXFLAGS= -std=c++11 -g -Wall  -Wunused-variable $(ADDRESSFIX)
 endif
 CFLAGS= -g -Wunused-variable -Wimplicit-function-declaration
 
-ADDLIB= -lboost_system -lboost_thread -lpthread
+ADDLIBDIR=-L/opt/boost/lib
+ADDINCDIR=-I/opt/boost/include
+
+ADDLIB= -Wl,-Bstatic  -lboost_system -lboost_thread  -Wl,-Bdynamic -lpthread
 
 PROJECTNAME=svnsrv
 

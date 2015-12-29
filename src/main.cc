@@ -81,21 +81,10 @@ int PrintUsage() {
 
 int ProcessSignalArgs(const char *signame, const LauncherArgs &lanucherAgrs) {
   if (strcmp(signame, "stop") == 0) {
-    auto b = DaemonStop(lanucherAgrs.pidFile);
-    if (!b) {
-      printf("Cannot kill svnsrv, maybe svnsrv is not running.\n");
-    } else {
-      printf("Kill svnsrv success.\n");
-    }
-    return b ? kRequireExit : kKillProcessFailed;
+    return DaemonStop(lanucherAgrs.pidFile) ? kRequireExit : kKillProcessFailed;
   } else if (strcmp(signame, "restart") == 0) {
-    auto b = DaemonRestart(lanucherAgrs.pidFile);
-    if (!b) {
-      printf("Cannot kill svnsrv, maybe svnsrv is not running.\n");
-    } else {
-      printf("Have informed svnsrv restart\n");
-    }
-    return b ? kRequireContinue : kKillProcessFailed;
+    return DaemonRestart(lanucherAgrs.pidFile) ? kRequireContinue
+                                               : kKillProcessFailed;
   }
   printf("Unsupported signal: %s\n", signame);
   return kArgumentError;
@@ -107,25 +96,32 @@ bool ParseServiceProfile(const char *cfile, NetworkServerArgs &na,
   char buffer[4096];
   if (cfile == nullptr) {
     if (GetProcessImageFileFolder(buffer, 4096) == false) {
-      printf("Failure, svnsrv cannot found self exe path!\n");
+      perror("Failure, svnsrv cannot found self exe path!\n");
       return false;
     }
     tomlfile = std::string(buffer) + "/svnsrv.toml";
     if (access(tomlfile.c_str(), F_OK) != 0) {
+      fprintf(stderr, "svnsrv private profile: %s,not exists\n",
+              tomlfile.c_str());
       tomlfile = std::string(getenv("HOME")) + "/.svnsrv/svnsrv.toml";
-      if (access(tomlfile.c_str(), R_OK) != 0)
+      if (access(tomlfile.c_str(), R_OK) != 0) {
+        fprintf(stderr, "svnsrv local profile: %s,not exists\n",
+                tomlfile.c_str());
         return false;
+      }
     }
   } else {
-    if (access(cfile, R_OK) != 0)
+    if (access(cfile, R_OK) != 0) {
+      fprintf(stderr, "svnsrv custom profile: %s,not exists\n", cfile);
       return false;
+    }
     tomlfile = cfile;
   }
   std::shared_ptr<cpptoml::table> g;
   try {
     g = cpptoml::parse_file(tomlfile);
   } catch (const cpptoml::parse_exception &e) {
-    printf("Failure, Parser svnsrv.toml failed: %s \n", e.what());
+    fprintf(stderr, "Failure, Parser svnsrv.toml failed: %s \n", e.what());
     return false;
   }
   auto Strings = [&](const char *key, const char *v) -> std::string {
@@ -217,8 +213,7 @@ int main(int argc, char **argv) {
   if (version)
     return PrintVersion(quiet);
   if (!ParseServiceProfile(cfile, networkArgs, launcherArgs)) {
-    printf("Cannot parse svnsrv.toml ,please check your file: %s\n",
-           cfile == nullptr ? "path/to/svnsrv/./svnsrv.toml" : cfile);
+    perror("svnsrv parse svnsrv.toml failed !\n");
     return -1;
   }
   klogger::InitializeKlogger(launcherArgs.logAccess.c_str(),

@@ -78,13 +78,13 @@ static bool write_pid(const char *pidfile) {
 int Daemonize(const std::string &pidfile) {
   auto pid = check_pid(pidfile.c_str());
   if (pid != 0) {
-    printf("svnsrv is already running, pid = %d.\n", pid);
+    fprintf(stderr, "svnsrv is already running, daemon pid = %d.\n", pid);
     return 1;
   }
   int fd;
   switch (fork()) {
   case -1:
-    printf("svnsrv fork() failed\n");
+    perror("svnsrv fork() failed\n");
     return -1;
   case 0:
     break;
@@ -99,16 +99,19 @@ int Daemonize(const std::string &pidfile) {
   fd = open("/dev/null", O_RDWR);
   if (fd == -1) {
     // open /dev/null failed
+    fprintf(stderr, "cannot open /dev/null \n");
     return -1;
   }
 
   if (dup2(fd, STDIN_FILENO) == -1) {
     // dup2(STDIN) failed
+    fprintf(stderr, "cannot dup2() set STDIN_FILENO");
     return -1;
   }
 
   if (dup2(fd, STDOUT_FILENO) == -1) {
     // dup2(STDOUT) failed
+    fprintf(stderr, "cannot dup2() set STDOUT_FILENO");
     return -1;
   }
   if (fd > STDERR_FILENO) {
@@ -117,7 +120,7 @@ int Daemonize(const std::string &pidfile) {
     }
   }
   if (!write_pid(pidfile.c_str())) {
-    klogger::Log(klogger::kFatal, "svnsrv daemon store pid failed");
+    klogger::Log(klogger::kFatal, "svnsrv daemon create pidfile failed !");
     klogger::FileFlush();
     return 2;
   }
@@ -161,9 +164,12 @@ bool DaemonStop(const std::string &pidFile) {
   int l = 1;
   auto pid = check_pid(pidFile.c_str());
   if (pid == 0) {
-    printf("svnsrv daemon not runing !");
+    perror("svnsrv daemon not runing !\n");
   } else {
+    int status;
     l = kill(pid, SIGUSR1);
+    waitpid(pid, &status, 0);
+    printf("stop svnsrv daemon success !\n");
   }
   return l == 0;
 }
@@ -200,30 +206,38 @@ static bool ParsePathAndArgv(pid_t pid, std::string &path, char *buf,
 bool DaemonRestart(const std::string &pidFile) {
   auto pid = check_pid(pidFile.c_str());
   if (pid == 0) {
-    printf("svnsrv daemon not runing !\n");
+    perror("svnsrv daemon not runing !\n");
     return false;
   }
   std::string path;
   char buffer[4096] = {0};
   std::vector<char *> Argv_;
   if (!ParsePathAndArgv(pid, path, buffer, 4096, Argv_)) {
-    printf("cannot parse svnsrv daemon cmdline !\n");
+    perror("cannot parse svnsrv daemon cmdline !\n");
     return false;
   }
   kill(pid, SIGUSR1);
   int status;
   waitpid(pid, &status, 0);
-  switch (fork()) {
+  int cpid = 0;
+  switch ((cpid = fork())) {
   case 0: {
     auto hr = execvp(path.c_str(), Argv_.data());
-    klogger::Log(klogger::kFatal, "cannot start svnsrv,result: %d, errno: %d",
-                 hr, errno);
+    fprintf(stderr, "cannot start svnsrv,result: %d, errno: %d", hr, errno);
+    klogger::Log(klogger::kFatal, "cannot start svnsrv,result: %d, errno: %s",
+                 hr, strerror(errno));
     exit(-1);
   } break;
   case -1:
     break;
   default:
+    waitpid(cpid, &status, 0);
     break;
   }
-  return true;
+  auto nid = check_pid(pidFile.c_str());
+  if (nid != 0) {
+    printf("New daemon service runing, pid= %d\n", nid);
+    return true;
+  }
+  return false;
 }

@@ -46,7 +46,7 @@ bool FowardDiscoverManager::InitializeManager(const char *tableFile) {
   try {
     g = cpptoml::parse_file(tableFile);
   } catch (const cpptoml::parse_exception &e) {
-    printf("Failure, Parser router.toml failed: %s \n", e.what());
+    fprintf(stderr, "Failure, Parser router.toml failed: %s \n", e.what());
     return false;
   }
   if (g->contains_qualified("Host.address")) {
@@ -65,7 +65,7 @@ bool FowardDiscoverManager::InitializeManager(const char *tableFile) {
 
   auto ta = g->get_table_array_qualified("Host.Content");
   if (ta == nullptr) {
-    printf("Cannot found any Host.Content from router.toml\n");
+    fprintf(stderr, "Cannot found any Host.Content from router.toml\n");
     return false;
   }
   for (auto t : *ta) {

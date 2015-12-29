@@ -8,12 +8,10 @@
 #ifndef SVNSRV_DAEMON_H
 #define SVNSRV_DAEMON_H
 
-int Daemonize();
+int Daemonize(const std::string &pidfile);
 int DaemonSignalMethod();
-int SIGINTRegister();
-void CrashHandle(const char *data, int size);
-bool StoreDaemonPID(const std::string &pidFile);
-bool StopDaemonService(const std::string &pidFile);
-bool RestartDaemonService(const std::string &pidFile);
+int SignalINTActive();
+bool DaemonStop(const std::string &pidFile);
+bool DaemonRestart(const std::string &pidFile);
 
 #endif

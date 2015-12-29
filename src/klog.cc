@@ -21,7 +21,7 @@ Klogger &Klogger::instance() {
   return m_klogger;
 }
 
-Klogger::Klogger() { id = getpid(); }
+Klogger::Klogger() {}
 
 Klogger::~Klogger() {
   if (logAccess != nullptr && logAccess != stdout) {
@@ -111,7 +111,7 @@ void Klogger::fflushE() {
 }
 
 void Klogger::access(const char *fmt, ...) {
-  static thread_local char buffer[4096];
+  char buffer[4096];
   auto t =
       std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   auto tm = std::localtime(&t);
@@ -130,8 +130,9 @@ void Klogger::access(const char *fmt, ...) {
 }
 
 void Klogger::log(KloggerLevel level, const char *fmt, ...) {
-  static thread_local char buffer[4096];
-  static thread_local size_t tid = pthread_self();
+  char buffer[4096];
+  size_t tid = pthread_self();
+  auto id = getpid();
   auto t =
       std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   auto tm = std::localtime(&t);

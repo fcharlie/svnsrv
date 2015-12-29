@@ -52,7 +52,7 @@ public:
 };
 class Klogger {
 private:
-  pid_t id;
+  // pid_t id;
   AtomicLock lockA;
   AtomicLock lockE;
   std::string infoFile_;

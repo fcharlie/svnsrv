@@ -18,10 +18,8 @@ CXXFLAGS= -std=c++11 -g -Wall  -Wunused-variable $(ADDRESSFIX)
 endif
 CFLAGS= -g -Wunused-variable -Wimplicit-function-declaration
 
-ADDLIBDIR=-L/opt/boost/lib
-ADDINCDIR=-I/opt/boost/include
 
-ADDLIB= -Wl,-Bstatic  -lboost_system -lboost_thread  -Wl,-Bdynamic -lpthread
+ADDLIB=  -lboost_system -lboost_thread  -lpthread
 
 PROJECTNAME=svnsrv
 
@@ -33,10 +31,10 @@ all:$(PROJECTNAME)
 
 
 $(PROJECTNAME): $(OBJECTS)
-	$(CXX) $(ADDLIBDIR) $(ADDRESSLINK) $(OBJECTS)  $(ADDLIB) -o $@
+	$(CXX) $(ADDRESSLINK) $(OBJECTS)  $(ADDLIB) -o $@
 
 $(OBJECTS):%.o:%.cc
-	$(CXX) $(CXXFLAGS) $(ADDINCDIR) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 install:$(PROJECTNAME) ../config/svnsrv.toml ../config/router.toml
 	cp $(PROJECTNAME) ../bin

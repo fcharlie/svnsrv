@@ -81,7 +81,7 @@ int PrintUsage() {
 
 int ProcessSignalArgs(const char *signame, const LauncherArgs &lanucherAgrs) {
   if (strcmp(signame, "stop") == 0) {
-    auto b = StopDaemonService(lanucherAgrs.pidFile);
+    auto b = DaemonStop(lanucherAgrs.pidFile);
     if (!b) {
       printf("Cannot kill svnsrv, maybe svnsrv is not running.\n");
     } else {
@@ -89,7 +89,7 @@ int ProcessSignalArgs(const char *signame, const LauncherArgs &lanucherAgrs) {
     }
     return b ? kRequireExit : kKillProcessFailed;
   } else if (strcmp(signame, "restart") == 0) {
-    auto b = RestartDaemonService(lanucherAgrs.pidFile);
+    auto b = DaemonRestart(lanucherAgrs.pidFile);
     if (!b) {
       printf("Cannot kill svnsrv, maybe svnsrv is not running.\n");
     } else {
@@ -229,22 +229,17 @@ int main(int argc, char **argv) {
   (void)debug;
   if (daemon) {
     DaemonSignalMethod();
-    if (Daemonize() != 0) {
-      klogger::Log(klogger::kError, "cannot create svnsrv daemon!");
-      klogger::FileFlush();
-      return -1;
-    }
-    if (!StoreDaemonPID(launcherArgs.pidFile)) {
-      klogger::Log(klogger::kError, "cannot store svnsrv daemon pid %d",
+    if (Daemonize(launcherArgs.pidFile) != 0) {
+      klogger::Log(klogger::kError, "cannot create svnsrv daemon,this pid= %d",
                    getpid());
       klogger::FileFlush();
-      return 1;
+      return -1;
     }
     klogger::Log(klogger::kInfo, "svnsrv run as daemon success,pid: %d",
                  getpid());
     klogger::FileFlush();
   } else {
-    SIGINTRegister();
+    SignalINTActive();
   }
 
   // klogger::Log(klogger::kInfo, "Listener address: %s Port: %d",

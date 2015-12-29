@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <stdint.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -19,13 +21,70 @@
 #include <vector>
 #include "klog.h"
 #include "Daemonize.h"
-#define isEffective(c) ((c >= '0' && c <= '9') || c == ' ' || c == 0)
 
-int Daemonize() {
+class ProcessIdMask {
+private:
+  char *ptr = nullptr;
+
+public:
+  ProcessIdMask() {}
+  bool Cache(const char *file) {
+    if (file == nullptr)
+      return false;
+    ptr = strdup(file);
+    if (ptr)
+      return true;
+    return false;
+  }
+  void Release() {
+    if (ptr)
+      free(ptr);
+  }
+  const char *Get() { return ptr; }
+  ~ProcessIdMask() {
+    if (ptr)
+      free(ptr);
+  }
+};
+
+static ProcessIdMask mask;
+
+static int check_pid(const char *pidfile) {
+  int pid = 0;
+  FILE *fp = fopen(pidfile, "r");
+  if (fp == nullptr)
+    return 0;
+  int n = fscanf(fp, "%d", &pid);
+  fclose(fp);
+  if (n != 1 || pid == 0 || pid == getpid()) {
+    return 0;
+  }
+  if (kill(pid, 0) && errno == ESRCH)
+    return 0;
+  return pid;
+}
+
+static bool write_pid(const char *pidfile) {
+  FILE *fp = nullptr;
+  if ((fp = fopen(pidfile, "w+")) == nullptr) {
+    klogger::Log(klogger::kFatal, "cannot open %s", pidfile);
+    return false;
+  }
+  fprintf(fp, "%d", getpid());
+  fclose(fp);
+  return true;
+}
+
+int Daemonize(const std::string &pidfile) {
+  auto pid = check_pid(pidfile.c_str());
+  if (pid != 0) {
+    printf("svnsrv is already running, pid = %d.\n", pid);
+    return 1;
+  }
   int fd;
   switch (fork()) {
   case -1:
-    printf("fork() failed\n");
+    printf("svnsrv fork() failed\n");
     return -1;
   case 0:
     break;
@@ -57,136 +116,114 @@ int Daemonize() {
       return -1;
     }
   }
+  if (!write_pid(pidfile.c_str())) {
+    klogger::Log(klogger::kFatal, "svnsrv daemon store pid failed");
+    klogger::FileFlush();
+    return 2;
+  }
+  mask.Cache(pidfile.c_str());
   return 0;
 }
 
-bool LookupDaemonPID(const std::string &pidFile, pid_t &id) {
-  FILE *fp = nullptr;
-  if ((fp = fopen(pidFile.c_str(), "r")) == nullptr) {
-    return false;
-  }
-  char buffer[16] = {0};
-  fread(buffer, 1, 16, fp);
-  fclose(fp);
-  for (auto &c : buffer) {
-    if (isEffective(c))
-      continue;
-    return false;
-  }
-  char *c;
-  id = (pid_t)strtol(buffer, &c, 10);
-  return true;
-}
-
-bool StoreDaemonPID(const std::string &pidFile) {
-  FILE *fp = nullptr;
-  if ((fp = fopen(pidFile.c_str(), "w+")) == nullptr) {
-    klogger::Log(klogger::kFatal, "cannot open %s", pidFile.c_str());
-    return false;
-  }
-  fprintf(fp, "%d", getpid());
-  fclose(fp);
-  return true;
-}
-
-bool StopDaemonService(const std::string &pidFile) {
-  pid_t id;
-  int l = 1;
-  if (LookupDaemonPID(pidFile, id)) {
-    printf("kill svnsrv daemon ,pid: %d\n", id);
-    l = kill(id, SIGUSR1);
-  } else {
-    return false;
-  }
-  unlink(pidFile.c_str());
-  return l == 0;
-}
-
-bool RestartDaemonService(const std::string &pidFile) {
-  pid_t id;
-  int l = 1;
-  if (LookupDaemonPID(pidFile, id)) {
-    unlink(pidFile.c_str());
-    l = kill(id, SIGUSR2);
-  } else {
-    return false;
-  }
-  return l == 0;
-}
-
-void CrashHandle(const char *data, int size) {
-  std::ofstream fs("/tmp/svnsrv_dump.log", std::ios::app);
-  std::string str = std::string(data, size);
-  fs << str;
-  fs.close();
-  // LOG(ERROR) << str;
-}
-
-extern pid_t daemon_child;
-
+////////////////////////////////////////////////////////////////////
+/// Daemon Action
+// stop
 void SignalDaemonKill(int sig) {
+  if (mask.Get()) {
+    unlink(mask.Get());
+  }
   klogger::Log(klogger::kInfo, "svnsrv daemon shutdown");
   klogger::FileFlush();
   _exit(0);
 }
-void SubversionStopCallback();
-void SignalDaemonRestart(int sig) {
-  klogger::Log(klogger::kInfo, "stop svnsrv daemon socket accpter");
-  SubversionStopCallback();
-  char selfPath[4096];
-  auto sz = readlink("/proc/self/exe", selfPath, 4095);
-  if (sz == 0)
-    return;
-  selfPath[sz] = 0;
-  char filename[32];
-  snprintf(filename, 32, "/proc/%d/cmdline", getpid());
-  char cmdline[4096] = {0};
-  auto fd = open(filename, O_RDONLY);
-  if (fd < 0) {
-    perror("open:");
-    klogger::Log(klogger::kFatal, "cannot open /proc/self/cmdline");
-    klogger::FileFlush();
-    _exit(-1);
-  }
-  auto ret = read(fd, cmdline, 4096);
-  std::vector<char *> Argv_;
-  Argv_.push_back(cmdline);
-  for (auto i = 0; i < ret; i++) {
-    if (cmdline[i] == 0 && i + 1 < ret) {
-      Argv_.push_back(&cmdline[++i]);
-    }
-  }
-  klogger::Log(klogger::kInfo, "start new process, Argv size: %d,First Arg: %s",
-               Argv_.size(), Argv_.at(0));
-  klogger::FileFlush();
-  switch (fork()) {
-  case -1:
-    exit(-1);
-  case 0:
-    exit(0);
-    break;
-  default:
-    break;
-  }
-  auto hr = execvp(selfPath, Argv_.data());
-  klogger::Log(klogger::kFatal, "cannot start svnsrv,result: %d", hr);
-  _exit(-1);
-}
 
-void SignalProcessKill(int sig) {
+////////// Ctrl+C
+void ExitSelfEvent(int sig) {
   klogger::Log(klogger::kInfo, "svnsrv shutdown");
   klogger::FileFlush();
   _exit(0);
 }
 
-int SIGINTRegister() {
-  signal(SIGINT, SignalProcessKill);
+/////// Register signal
+int SignalINTActive() {
+  signal(SIGINT, ExitSelfEvent);
   return 0;
 }
 
 int DaemonSignalMethod() {
   ///
   signal(SIGUSR1, SignalDaemonKill);
-  signal(SIGUSR2, SignalDaemonRestart);
+  // signal(SIGUSR2, SignalDaemonRestart);
   return 0;
+}
+
+bool DaemonStop(const std::string &pidFile) {
+  int l = 1;
+  auto pid = check_pid(pidFile.c_str());
+  if (pid == 0) {
+    printf("svnsrv daemon not runing !");
+  } else {
+    l = kill(pid, SIGUSR1);
+  }
+  return l == 0;
+}
+
+static bool ParsePathAndArgv(pid_t pid, std::string &path, char *buf,
+                             size_t bufsize, std::vector<char *> &Argv_) {
+  char filename[32];
+  snprintf(filename, 32, "/proc/%d/exe", pid);
+  char exePath[4096] = {0};
+  auto sz = readlink(filename, exePath, 4095);
+  if (sz == 0) {
+    return false;
+  }
+  path.assign(exePath);
+  snprintf(filename, 32, "/proc/%d/cmdline", pid);
+  auto fd = open(filename, O_RDONLY);
+  if (fd < 0) {
+    klogger::Log(klogger::kFatal, "cannot open /proc/%d/cmdline", pid);
+    klogger::FileFlush();
+    return false;
+  }
+  auto ret = read(fd, buf, bufsize);
+  Argv_.push_back(buf);
+  for (auto i = 0; i < ret; i++) {
+    if (buf[i] == 0 && i + 1 < ret) {
+      Argv_.push_back(&buf[++i]);
+    }
+  }
+  Argv_.push_back(nullptr);
+  close(fd);
+  return true;
+}
+
+bool DaemonRestart(const std::string &pidFile) {
+  auto pid = check_pid(pidFile.c_str());
+  if (pid == 0) {
+    printf("svnsrv daemon not runing !\n");
+    return false;
+  }
+  std::string path;
+  char buffer[4096] = {0};
+  std::vector<char *> Argv_;
+  if (!ParsePathAndArgv(pid, path, buffer, 4096, Argv_)) {
+    printf("cannot parse svnsrv daemon cmdline !\n");
+    return false;
+  }
+  kill(pid, SIGUSR1);
+  int status;
+  waitpid(pid, &status, 0);
+  switch (fork()) {
+  case 0: {
+    auto hr = execvp(path.c_str(), Argv_.data());
+    klogger::Log(klogger::kFatal, "cannot start svnsrv,result: %d, errno: %d",
+                 hr, errno);
+    exit(-1);
+  } break;
+  case -1:
+    break;
+  default:
+    break;
+  }
+  return true;
 }

@@ -76,8 +76,8 @@ private:
   std::size_t next_io_service_;
 };
 
-class SubversionServer;
-SubversionServer *context = nullptr;
+// class SubversionServer;
+// SubversionServer *context = nullptr;
 /**
 * class SubversionServer
 **/
@@ -88,7 +88,7 @@ public:
   explicit SubversionServer(const NetworkServerArgs &networkArgs)
       : io_service_pool_(networkArgs.poolSize),
         acceptor_(io_service_pool_.get_io_service()) {
-    context = this;
+    // context = this;
     boost::asio::ip::tcp::endpoint endpoint(
         boost::asio::ip::address::from_string(networkArgs.address),
         networkArgs.port);
@@ -105,7 +105,9 @@ public:
     // });
     start_accept();
   }
-  ~SubversionServer() { context = nullptr; }
+  ~SubversionServer() {
+    // context = nullptr;
+  }
   void run() { io_service_pool_.run(); }
   void stop() { acceptor_.close(); }
 
@@ -129,10 +131,10 @@ private:
   tcp::acceptor acceptor_;
 };
 
-void SubversionStopCallback() {
-  if (context)
-    context->stop();
-}
+// void SubversionStopCallback() {
+//   if (context)
+//     context->stop();
+// }
 
 int SubversionServerInitialize(const NetworkServerArgs &networkArgs) {
   klogger::Log(klogger::kInfo, "svnsrv running");

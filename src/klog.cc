@@ -110,6 +110,14 @@ void Klogger::fflushE() {
   fflush(logError);
 }
 
+void Klogger::shutdown() {
+  log(klogger::kInfo, "svnsrv shutdown");
+  fclose(logAccess);
+  fclose(logError);
+  logAccess = stdout;
+  logAccess = stderr;
+}
+
 void Klogger::access(const char *fmt, ...) {
   char buffer[4096];
   auto t =

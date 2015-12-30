@@ -31,7 +31,11 @@ public:
   bool Cache(const char *file) {
     if (file == nullptr)
       return false;
-    ptr = strdup(file);
+    auto l = strlen(file);
+    ptr = (char *)malloc(l + 1);
+    if (ptr == nullptr)
+      return false;
+    memcpy(ptr, file, l + 1);
     if (ptr)
       return true;
     return false;
@@ -135,15 +139,17 @@ void SignalDaemonKill(int sig) {
   if (mask.Get()) {
     unlink(mask.Get());
   }
-  klogger::Log(klogger::kInfo, "svnsrv daemon shutdown");
-  klogger::FileFlush();
+  klogger::Shutdown();
+  // klogger::Log(klogger::kInfo, "svnsrv daemon shutdown");
+  // klogger::FileFlush();
   _exit(0);
 }
 
 ////////// Ctrl+C
 void ExitSelfEvent(int sig) {
-  klogger::Log(klogger::kInfo, "svnsrv shutdown");
-  klogger::FileFlush();
+  klogger::Shutdown();
+  // klogger::Log(klogger::kInfo, "svnsrv shutdown");
+  // klogger::FileFlush();
   _exit(0);
 }
 

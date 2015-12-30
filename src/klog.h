@@ -71,6 +71,7 @@ public:
   bool init(const char *infoFile, const char *errorFile = nullptr);
   void access(const char *fmt, ...);
   void fflushE();
+  void shutdown();
   void log(KloggerLevel level, const char *fmt, ...);
   static Klogger &instance();
 };
@@ -79,6 +80,7 @@ public:
 #define Log Klogger::instance().log
 #define Move Klogger::instance().task
 #define FileFlush Klogger::instance().fflushE ////
+#define Shutdown Klogger::instance().shutdown
 #define KLOGGER_VERSION 1
 }
 

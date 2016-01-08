@@ -3,7 +3,7 @@
 * oschina.net subversion proxy service
 * author: Force.Charlie
 * Date: 2015.11
-* Copyright (C) 2015. OSChina.NET. All Rights Reserved.
+* Copyright (C) 2016. OSChina.NET. All Rights Reserved.
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,7 +44,7 @@ static const char *kUsage =
 static const char *kVersion =
     "svnsrv version " CONFIG_VERSION "\n"
     "svnsrv is authored by Force Charlie <forcemz@forcemz.net>.\n"
-    "Copyright (C) 2015 OSChina.NET .All Rights Reserved.\n"
+    "Copyright (C) 2016 OSChina.NET .All Rights Reserved.\n"
     "This software Licensed under the MTI License.\n";
 
 bool GetProcessImageFileFolder(char *buffer, size_t bufSize) {

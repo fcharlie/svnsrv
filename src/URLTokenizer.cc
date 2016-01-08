@@ -3,7 +3,7 @@
 * oschina.net subversion proxy service
 * author: Force.Charlie
 * Date: 2015.11
-* Copyright (C) 2015. OSChina.NET. All Rights Reserved.
+* Copyright (C) 2016. OSChina.NET. All Rights Reserved.
 */
 #include "URLTokenizer.hpp"
 
@@ -11,51 +11,48 @@
 * svn://subversion.io/subversion/subversion
 **/
 
-bool URLTokenizer(const char *u, SubversionURL &us) {
-  us.origin.assign(u);
-  if (u == nullptr)
+bool URLTokenizer(const std::string &baseURL, SubversionURL &us) {
+  if (baseURL.empty())
     return false;
   int depth = 0;
   us.path.push_back('/');
   std::string str_port;
   bool bPort = false;
-  for (; *u; u++) {
-    if (*u == '/') {
+  for (auto &i : baseURL) {
+    if (i == '/' && depth < 5) {
       depth++;
       continue;
     }
     switch (depth) {
     case 0:
-      if (*u == ':')
+      if (i == ':')
         continue;
-      us.scheme.push_back(*u);
+      us.scheme.push_back(i);
       break;
     case 1:
       ////URL must svn:// not svn:/fuck/...
       return false;
       break;
     case 2:
-      if (*u == ':') {
+      if (i == ':') {
         bPort = true;
         continue;
       }
       if (bPort) {
-        str_port.push_back(*u);
+        str_port.push_back(i);
       } else {
-        us.host.push_back(*u);
+        us.host.push_back(i);
       }
       break;
     case 3:
-      us.owner.push_back(*u);
+      us.owner.push_back(i);
       break;
     case 4:
-      us.repository.push_back(*u);
+      us.repository.push_back(i);
       break;
     case 5:
-      for (; *u; u++)
-        us.path.push_back(*u);
-      break;
     default:
+      us.path.push_back(i);
       break;
     }
     ////
@@ -69,5 +66,6 @@ bool URLTokenizer(const char *u, SubversionURL &us) {
     char *c;
     us.port = strtol(str_port.c_str(), &c, 10);
   }
+  us.origin.assign(baseURL);
   return true;
 }

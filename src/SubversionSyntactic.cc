@@ -3,7 +3,7 @@
 * oschina.net subversion proxy service
 * author: Force.Charlie
 * Date: 2015.11
-* Copyright (C) 2015. OSChina.NET. All Rights Reserved.
+* Copyright (C) 2016. OSChina.NET. All Rights Reserved.
 */
 #include <cstdio>
 #include <cstring>
@@ -12,14 +12,21 @@
 #include <cstdlib>
 #include "SubversionSyntactic.hpp"
 
-// bool SubversionParser::Parse(char *s,size_t l)
-// {
-// 	return true;
-// }
+/*
+  item   = word / number / string / list
+  word   = ALPHA *(ALPHA / DIGIT / "-") space
+  number = 1*DIGIT space
+  string = 1*DIGIT ":" *OCTET space
+         ; digits give the byte count of the *OCTET portion
+  list   = "(" space *item ")" space
+  space  = 1*(SP / LF)
+*/
 
 bool ExchangeCapabilities::Parse(char *str, size_t length) {
-  if (str == nullptr || length == 0)
+  if (str == nullptr || length == 0) {
+    lastError.assign("Malformed Network data !,Null of buffer");
     return false;
+  }
   int depth = 0;
   size_t i = 0;
   auto status = kStatusClear;
@@ -36,6 +43,7 @@ bool ExchangeCapabilities::Parse(char *str, size_t length) {
     case ')':
       depth--;
       continue;
+    case '\n':
     case ' ': {
       if (status == kCapabilities) {
         if (!cbuf.empty())
@@ -43,8 +51,6 @@ bool ExchangeCapabilities::Parse(char *str, size_t length) {
         cbuf.clear();
       }
     } break;
-    case '\n':
-      continue;
     default:
       break;
     }
@@ -62,33 +68,43 @@ bool ExchangeCapabilities::Parse(char *str, size_t length) {
       if (discoverCapabilities && depth == 1) {
         status = kSubversionURL;
       } else {
+        if (str[i] == ' ')
+          continue;
         cbuf.push_back(str[i]);
       }
     } break;
     case kSubversionURL:
+      if (str[i] == ' ')
+        continue;
       if (isdigit(str[i])) {
         stringLength.push_back(str[i]);
       } else {
         char *c;
         auto n = strtol(stringLength.c_str(), &c, 10);
         i++;
-        if (n + i >= length)
+        if (n + i >= length) {
+          lastError.assign("Bad URL Length offset");
           return false;
+        }
         baseURL.assign(&str[i], n);
         i += n;
         stringLength.clear();
-        status = kUseAgent;
+        status = kUserAgent;
       }
       break;
-    case kUseAgent: {
+    case kUserAgent: {
+      if (str[i] == ' ')
+        continue;
       if (isdigit(str[i])) {
         stringLength.push_back(str[i]);
       } else {
         char *c;
         auto n = strtol(stringLength.c_str(), &c, 10);
         i++;
-        if (n + i >= length)
+        if (n + i >= length) {
+          lastError.assign("Bad UserAgent Length offset");
           return false;
+        }
         userAgent.assign(&str[i], n);
         i += n;
         status = kTokenEnd;
@@ -108,7 +124,15 @@ bool ExchangeCapabilities::Parse(char *str, size_t length) {
   // identifying the RA implementation, e.g. "SVN/1.6.0" or "SVNKit 1.1.4".
   // client is the string returned by svn_ra_callbacks2_t.get_client_string;
   // that callback may not be implemented, so this is optional.
-  if (depth != 0 || status < kUseAgent)
+  if (depth != 0 || baseURL.empty()) {
+    lastError.assign("Malformed Network data !");
     return false;
-  return URLTokenizer(baseURL.c_str(), su);
+  }
+  if (!URLTokenizer(baseURL, su)) {
+    lastError.assign("Irregular spelling of URL '");
+    lastError.append(baseURL);
+    lastError.push_back('\'');
+    return false;
+  }
+  return true;
 }

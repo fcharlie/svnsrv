@@ -3,7 +3,7 @@
 * oschina.net subversion proxy service
 * author: Force.Charlie
 * Date: 2015.11
-* Copyright (C) 2015. OSChina.NET. All Rights Reserved.
+* Copyright (C) 2016. OSChina.NET. All Rights Reserved.
 */
 #include <string>
 #include <array>
@@ -60,9 +60,11 @@ void SubversionSession::start() {
     return;
   ExchangeCapabilities eca;
   if (!eca.Parse(clt_buffer_, greetingLength)) {
-    klogger::Log(klogger::kError, "Bad Network data,Address: %s",
+    klogger::Log(klogger::kError, "Bad Network data: %s Remote: %s",
+                 eca.getLastErrorMessage().c_str(),
                  socket_.remote_endpoint().address().to_string().c_str());
-    sendError(210004, "Bad Network data", sizeof("Bad Network data") - 1);
+    sendError(210004, eca.getLastErrorMessage().c_str(),
+              eca.getLastErrorMessage().size());
     return;
   }
   auto us = eca.getSubversionURL();

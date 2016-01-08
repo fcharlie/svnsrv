@@ -3,7 +3,7 @@
 *  klog Project
 * author: Force.Charlie
 * Date: 2015.11
-* Copyright (C) 2015. OSChina.NET. All Rights Reserved.
+* Copyright (C) 2016. OSChina.NET. All Rights Reserved.
 */
 #ifndef MIRACLE_KLOG_H
 #define MIRACLE_KLOG_H

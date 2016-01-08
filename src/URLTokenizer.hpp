@@ -3,7 +3,7 @@
 * oschina.net subversion proxy service
 * author: Force.Charlie
 * Date: 2015.11
-* Copyright (C) 2015. OSChina.NET. All Rights Reserved.
+* Copyright (C) 2016. OSChina.NET. All Rights Reserved.
 */
 
 #ifndef SVNSERVICE_TOKENIZER_HPP
@@ -30,6 +30,6 @@ typedef struct SubversionURL_ {
   std::string origin;
 } SubversionURL;
 
-bool URLTokenizer(const char *baseURL, SubversionURL &us);
+bool URLTokenizer(const std::string &baseURL, SubversionURL &us);
 
 #endif

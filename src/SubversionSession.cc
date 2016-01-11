@@ -33,8 +33,7 @@ step 7.    svnsrv transfer begin.
 **/
 
 SubversionSession::SubversionSession(boost::asio::io_service &io_service)
-    : strand_(io_service), socket_(io_service), backend_(io_service),
-      IsEnabledBackend(false) {
+    : strand_(io_service), socket_(io_service), backend_(io_service) {
   /////
 }
 
@@ -44,9 +43,15 @@ void SubversionSession::start() {
       "( success ( 2 2 ( ) ( edit-pipeline svndiff1 absent-entries "
       "depth inherited-props log-revprops ) ) ) ";
   boost::system::error_code e;
+  std::string addr = socket_.remote_endpoint().address().to_string();
+  klogger::Log(klogger::kInfo, "New Connection,Remote: %s", addr.c_str());
   socket_.write_some(boost::asio::buffer(mbuffer, sizeof(mbuffer) - 1), e);
-  if (e)
+  if (e) {
+    klogger::Log(klogger::kError,
+                 "Write handshake message to downstream fatal,Remote: %s",
+                 addr.c_str());
     return;
+  }
   /////////////////////////////////////////////////////// sendError
   auto sendError = [&](int eid, const char *msg, size_t length) -> bool {
     auto ml = snprintf(buffer_, length + 64,
@@ -55,13 +60,16 @@ void SubversionSession::start() {
     return !e;
   };
   auto greetingLength = socket_.read_some(boost::asio::buffer(clt_buffer_), e);
-  if (e)
+  if (e) {
+    klogger::Log(klogger::kError,
+                 "Read handshake message from downstream failed,Remote: %s",
+                 addr.c_str());
     return;
+  }
   ExchangeCapabilities eca;
   if (!eca.Parse(clt_buffer_, greetingLength)) {
     klogger::Log(klogger::kError, "Bad Network data: %s Remote: %s",
-                 eca.getLastErrorMessage().c_str(),
-                 socket_.remote_endpoint().address().to_string().c_str());
+                 eca.getLastErrorMessage().c_str(), addr.c_str());
     sendError(210004, eca.getLastErrorMessage().c_str(),
               eca.getLastErrorMessage().size());
     return;
@@ -77,10 +85,9 @@ void SubversionSession::start() {
     sendError(200042, msg, sizeof(msg) - 1);
     return;
   }
-  klogger::Access("Remote %s Storage %s URL %s Agent %s",
+  klogger::Access("Remote: %s Storage: %s | URL %s ",
                   socket_.remote_endpoint().address().to_string().c_str(),
-                  node.address.c_str(), eca.getBaseURL().c_str(),
-                  eca.getUserAgent().c_str());
+                  node.address.c_str(), eca.getBaseURL().c_str());
   if (node.address.empty())
     return;
   tcp::endpoint backend_point(
@@ -93,83 +100,83 @@ void SubversionSession::start() {
               sizeof("Storage is not available") - 1);
     return;
   }
-  IsEnabledBackend = true;
+
   backend_.read_some(boost::asio::buffer(buffer_), e);
+  if (e) {
+    return;
+  }
   backend_.write_some(boost::asio::buffer(clt_buffer_, greetingLength), e);
+  if (e) {
+    return;
+  }
   if (e)
     return;
   backend_.async_read_some(
       boost::asio::buffer(buffer_),
-      strand_.wrap(boost::bind(&SubversionSession::backend_socket_read,
+      strand_.wrap(boost::bind(&SubversionSession::upstream_read,
                                shared_from_this(),
                                boost::asio::placeholders::error,
                                boost::asio::placeholders::bytes_transferred)));
   socket_.async_read_some(
       boost::asio::buffer(clt_buffer_),
-      strand_.wrap(boost::bind(&SubversionSession::frontend_socket_read,
+      strand_.wrap(boost::bind(&SubversionSession::downstream_read,
                                shared_from_this(),
                                boost::asio::placeholders::error,
                                boost::asio::placeholders::bytes_transferred)));
 }
 
 void SubversionSession::stop() {
-  boost::system::error_code ec;
-  socket_.shutdown(tcp::socket::shutdown_both, ec);
-  if (!ec)
+  if (socket_.is_open()) {
     socket_.close();
-  if (IsEnabledBackend) {
-    backend_.shutdown(tcp::socket::shutdown_both, ec);
-    if (!ec)
-      backend_.close();
+  }
+  if (backend_.is_open()) {
+    backend_.close();
   }
 }
 
-void SubversionSession::backend_socket_read(const boost::system::error_code &e,
-                                            std::size_t bytes_transferred) {
+void SubversionSession::upstream_read(const boost::system::error_code &e,
+                                      std::size_t bytes_transferred) {
   if (!e) {
     boost::asio::async_write(
         socket_, boost::asio::buffer(buffer_, bytes_transferred),
-        strand_.wrap(boost::bind(&SubversionSession::frontend_socket_write,
+        strand_.wrap(boost::bind(&SubversionSession::downstream_write,
                                  shared_from_this(),
                                  boost::asio::placeholders::error)));
   } else {
-    socket_.cancel();
+    socket_.shutdown(tcp::socket::shutdown_both);
   }
 }
 
-void SubversionSession::frontend_socket_write(
-    const boost::system::error_code &e) {
+void SubversionSession::downstream_write(const boost::system::error_code &e) {
   if (!e) {
     backend_.async_read_some(
         boost::asio::buffer(buffer_),
         strand_.wrap(
-            boost::bind(&SubversionSession::backend_socket_read,
-                        shared_from_this(), boost::asio::placeholders::error,
+            boost::bind(&SubversionSession::upstream_read, shared_from_this(),
+                        boost::asio::placeholders::error,
                         boost::asio::placeholders::bytes_transferred)));
   }
 }
 
-void SubversionSession::frontend_socket_read(const boost::system::error_code &e,
-                                             std::size_t bytes_transferred) {
+void SubversionSession::downstream_read(const boost::system::error_code &e,
+                                        std::size_t bytes_transferred) {
   if (!e) {
     boost::asio::async_write(
         backend_, boost::asio::buffer(clt_buffer_, bytes_transferred),
-        strand_.wrap(boost::bind(&SubversionSession::backend_socket_write,
+        strand_.wrap(boost::bind(&SubversionSession::upstream_write,
                                  shared_from_this(),
                                  boost::asio::placeholders::error)));
   } else {
-    // LOG(INFO)<<" backend socket cancel ";
-    backend_.cancel();
+    backend_.shutdown(tcp::socket::shutdown_both);
   }
 }
-void SubversionSession::backend_socket_write(
-    const boost::system::error_code &e) {
+void SubversionSession::upstream_write(const boost::system::error_code &e) {
   if (!e) {
     socket_.async_read_some(
         boost::asio::buffer(clt_buffer_),
         strand_.wrap(
-            boost::bind(&SubversionSession::frontend_socket_read,
-                        shared_from_this(), boost::asio::placeholders::error,
+            boost::bind(&SubversionSession::downstream_read, shared_from_this(),
+                        boost::asio::placeholders::error,
                         boost::asio::placeholders::bytes_transferred)));
   }
 }

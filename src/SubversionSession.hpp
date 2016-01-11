@@ -28,16 +28,15 @@ public:
   void stop();
 
 private:
-  void frontend_socket_read(const boost::system::error_code &e,
-                            std::size_t bytes_transferred);
-  void frontend_socket_write(const boost::system::error_code &e);
-  void backend_socket_read(const boost::system::error_code &e,
-                           std::size_t bytes_transferred);
-  void backend_socket_write(const boost::system::error_code &e);
+  void downstream_read(const boost::system::error_code &e,
+                       std::size_t bytes_transferred);
+  void downstream_write(const boost::system::error_code &e);
+  void upstream_read(const boost::system::error_code &e,
+                     std::size_t bytes_transferred);
+  void upstream_write(const boost::system::error_code &e);
   boost::asio::io_service::strand strand_;
   tcp::socket socket_;
   tcp::socket backend_;
-  bool IsEnabledBackend;
   char buffer_[kDefaultBufferSize];
   char clt_buffer_[kDefaultBufferSize];
 };

@@ -25,41 +25,13 @@ Klogger::Klogger() {}
 
 Klogger::~Klogger() {
   if (logAccess != nullptr && logAccess != stdout) {
-    fflush(logAccess);
+    // fflush(logAccess);
     fclose(logAccess);
   }
   if (logError != nullptr && logError != stderr) {
-    fflush(logError);
+    // fflush(logError);
     fclose(logError);
   }
-}
-
-bool Klogger::task() {
-  bool result = true;
-  if (logError != nullptr && logError != stderr) {
-    lockE.lock();
-    fflush(logError);
-    fclose(logError);
-    std::string newFile =
-        errorFile_ + std::string(".") + std::to_string(time((time_t *)NULL));
-    rename(errorFile_.c_str(), newFile.c_str());
-    if ((logError = fopen(errorFile_.c_str(), "a+")) == nullptr)
-      result = false;
-    lockE.unlock();
-    log(kInfo, "move log error file success");
-  }
-  if (logAccess != nullptr && logAccess != stdout) {
-    lockA.lock();
-    fflush(logAccess);
-    fclose(logAccess);
-    std::string newFile =
-        infoFile_ + std::string(".") + std::to_string(time((time_t *)NULL));
-    rename(infoFile_.c_str(), newFile.c_str());
-    if ((logAccess = fopen(infoFile_.c_str(), "a+")) == nullptr)
-      result = false;
-    lockA.unlock();
-  }
-  return result;
 }
 
 /**
@@ -77,19 +49,13 @@ ATTRIBUTES
        Because, File Lock use too long time,and cannot rename Log File
 ****/
 size_t Klogger::writerAccess(const char *buffer, size_t size) {
-  lockA.lock();
-  auto l = fwrite(buffer, 1, size, logAccess);
-  // fflush(logAccess);
-  lockA.unlock();
-  return l;
+  std::lock_guard<std::mutex> lock(mtxE);
+  return fwrite(buffer, 1, size, logAccess);;
 }
 
 size_t Klogger::writerError(const char *buffer, size_t size) {
-  lockE.lock();
-  auto l = fwrite(buffer, 1, size, logError);
-  // fflush(logError);
-  lockE.unlock();
-  return l;
+  std::lock_guard<std::mutex> lock(mtxE);
+  return  fwrite(buffer, 1, size, logError);;
 }
 
 bool Klogger::init(const char *infoFile, const char *errorFile) {
@@ -110,12 +76,27 @@ void Klogger::fflushE() {
   fflush(logError);
 }
 
-void Klogger::shutdown() {
-  log(klogger::kInfo, "svnsrv shutdown");
-  fclose(logAccess);
-  fclose(logError);
-  logAccess = stdout;
-  logAccess = stderr;
+void Klogger::destory(const char *msg) {
+  char buffer[4096];
+  auto id = getpid();
+  auto tid = pthread_self();
+  auto t =
+      std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+  auto tm = std::localtime(&t);
+  auto len =
+      snprintf(buffer, 4096, "[Info] Process: %d Thread: %zu Time: "
+                             "%d/%02d/%02d %s %02d:%02d:%02d %s\n",
+               id, tid, (1900 + tm->tm_year), tm->tm_mon + 1, tm->tm_mday,
+               wday[tm->tm_wday], tm->tm_hour, tm->tm_min, tm->tm_sec, msg);
+  if (logError) {
+    fwrite(buffer, 1, len, logError);
+    fclose(logError);
+    logError = nullptr;
+  }
+  if (logAccess) {
+    fclose(logAccess);
+    logAccess = nullptr;
+  }
 }
 
 void Klogger::access(const char *fmt, ...) {

@@ -139,7 +139,7 @@ void SignalDaemonKill(int sig) {
   if (mask.Get()) {
     unlink(mask.Get());
   }
-  klogger::Shutdown();
+  klogger::Destory("svnsrv daemon shutdown");
   // klogger::Log(klogger::kInfo, "svnsrv daemon shutdown");
   // klogger::FileFlush();
   _exit(0);
@@ -147,7 +147,7 @@ void SignalDaemonKill(int sig) {
 
 ////////// Ctrl+C
 void ExitSelfEvent(int sig) {
-  klogger::Shutdown();
+  klogger::Destory("svnsrv shutdown");
   // klogger::Log(klogger::kInfo, "svnsrv shutdown");
   // klogger::FileFlush();
   _exit(0);

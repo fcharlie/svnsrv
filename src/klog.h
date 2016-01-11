@@ -11,19 +11,7 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <string>
-#if defined(_MSC_VER)
-#include <windows.h>
-template <typename _Type>
-inline bool AtomCompareExchange(volatile _Type *t, _Type atomOld,
-                                _Type atomNew) {
-  return (atomOld == InterlockedCompareExchange(t, atomNew, atomOld));
-}
-#define AtomInterlockedExchange InterlockedExchange
-#elif defined(__clang__) || defined(__GNUC__)
-#define YieldProcessor sched_yield
-#define AtomCompareExchange __sync_bool_compare_and_swap
-#define AtomInterlockedExchange __sync_lock_test_and_set
-#endif
+#include <mutex>
 
 namespace klogger {
 enum KloggerLevel {
@@ -33,28 +21,12 @@ enum KloggerLevel {
   kError = 3,
   kFatal = 4
 };
-class AtomicLock {
-private:
-  volatile long mask;
 
-public:
-  AtomicLock() : mask(0) {}
-  void lock() {
-    while (!AtomCompareExchange(&mask, 0, 1))
-      YieldProcessor();
-  }
-  void unlock() { AtomInterlockedExchange(&mask, 0); }
-  bool trylock() {
-    if (AtomCompareExchange(&mask, 0, 1))
-      return true;
-    return false;
-  }
-};
 class Klogger {
 private:
   // pid_t id;
-  AtomicLock lockA;
-  AtomicLock lockE;
+  std::mutex mtxA;
+  std::mutex mtxE;
   std::string infoFile_;
   std::string errorFile_;
   FILE *logAccess = stdout;
@@ -67,20 +39,18 @@ public:
   Klogger &operator=(const Klogger &) = delete;
   Klogger(Klogger &) = delete;
   ~Klogger();
-  bool task();
   bool init(const char *infoFile, const char *errorFile = nullptr);
   void access(const char *fmt, ...);
   void fflushE();
-  void shutdown();
+  void destory(const char *msg);
   void log(KloggerLevel level, const char *fmt, ...);
   static Klogger &instance();
 };
 #define InitializeKlogger Klogger::instance().init ///;
 #define Access Klogger::instance().access          ///;
 #define Log Klogger::instance().log
-#define Move Klogger::instance().task
 #define FileFlush Klogger::instance().fflushE ////
-#define Shutdown Klogger::instance().shutdown
+#define Destory Klogger::instance().destory
 #define KLOGGER_VERSION 1
 }
 

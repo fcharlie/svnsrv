@@ -114,9 +114,12 @@ void SubversionSession::start() {
 }
 
 void SubversionSession::stop() {
+  socket_.shutdown(tcp::socket::shutdown_both);
   socket_.close();
-  if (IsEnabledBackend)
+  if (IsEnabledBackend) {
+    backend_.shutdown(tcp::socket::shutdown_both);
     backend_.close();
+  }
 }
 
 void SubversionSession::backend_socket_read(const boost::system::error_code &e,

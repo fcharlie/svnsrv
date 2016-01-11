@@ -147,7 +147,7 @@ bool ParseServiceProfile(const char *cfile, NetworkServerArgs &na,
   na.poolSize = Integer("Service.PoolSize", 64);
   na.port = Integer("Network.Port", 3690);
   na.compressionLevel = Integer("Network.Compression", 0);
-  na.connectTimeout = Integer("Network.Timeout", 3600);
+  na.connectTimeout = Integer("Network.Timeout", -1);
   printf("ConnectTimeout: %d\n", na.connectTimeout);
   na.address = Strings("Network.Address", "127.0.0.1");
   na.domain = Strings("Network.Domain", "git.oschina.net");

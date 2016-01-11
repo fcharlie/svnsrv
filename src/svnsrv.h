@@ -15,7 +15,7 @@ typedef struct NetworkServerArgs__ {
   uint32_t poolSize;
   uint32_t port;
   uint32_t compressionLevel;
-  uint32_t connectTimeout;
+  int32_t connectTimeout;
   bool isDomainFilter;
   bool isTunnel;
   bool reserved[2];

@@ -30,7 +30,7 @@ private:
   SubversionURL su;
 
 public:
-  ExchangeCapabilities() {}
+  ExchangeCapabilities() : baseURL(256, '\0') {}
   std::vector<std::string> mCapabilities;
   bool Parse(char *s, size_t length);
   int getProtocolVersion() { return this->protocolVersion; }

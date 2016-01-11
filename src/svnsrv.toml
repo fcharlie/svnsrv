@@ -19,6 +19,7 @@ Error="/tmp/svnsrv.error.log"
 RangeFile="router.toml"
 
 [Network]
+Timeout=6000
 #if IPv6 0::0
 Address="0.0.0.0"
 Port=3690

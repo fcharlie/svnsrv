@@ -49,10 +49,9 @@ void SubversionSession::start() {
     return;
   /////////////////////////////////////////////////////// sendError
   auto sendError = [&](int eid, const char *msg, size_t length) -> bool {
-    char message[512];
-    auto ml = snprintf(message, 512, "( failure ( ( %d %zu:%s 0: 0 ) ) ) ", eid,
-                       length, msg);
-    socket_.write_some(boost::asio::buffer(message, ml), e);
+    auto ml = snprintf(buffer_, length + 64,
+                       "( failure ( ( %d %zu:%s 0: 0 ) ) ) ", eid, length, msg);
+    socket_.write_some(boost::asio::buffer(buffer_, ml), e);
     return !e;
   };
   auto greetingLength = socket_.read_some(boost::asio::buffer(clt_buffer_), e);
@@ -114,11 +113,14 @@ void SubversionSession::start() {
 }
 
 void SubversionSession::stop() {
-  socket_.shutdown(tcp::socket::shutdown_both);
-  socket_.close();
+  boost::system::error_code ec;
+  socket_.shutdown(tcp::socket::shutdown_both, ec);
+  if (!ec)
+    socket_.close();
   if (IsEnabledBackend) {
-    backend_.shutdown(tcp::socket::shutdown_both);
-    backend_.close();
+    backend_.shutdown(tcp::socket::shutdown_both, ec);
+    if (!ec)
+      backend_.close();
   }
 }
 

@@ -11,17 +11,17 @@
 #include <stdint.h>
 #include <string>
 
-typedef struct NetworkServerArgs__{
+typedef struct NetworkServerArgs__ {
   uint32_t poolSize;
   uint32_t port;
   uint32_t compressionLevel;
+  uint32_t connectTimeout;
   bool isDomainFilter;
   bool isTunnel;
   bool reserved[2];
   std::string address;
   std::string domain;
-}NetworkServerArgs;
-
+} NetworkServerArgs;
 
 /// Align 4
 typedef struct LauncherArgs__ {

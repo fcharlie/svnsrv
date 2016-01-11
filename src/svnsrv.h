@@ -11,11 +11,18 @@
 #include <stdint.h>
 #include <string>
 
+/*
+* Subversion Timeout setting
+*/
+#define TIMEOUT_INFINITE ((uint32_t)-1)
+/// if timeout equal TIMEOUT_INFINITE, not setting timeout
+#define TIMEOUT_LIMIT 43200 /// timeout is 12 hours
+
 typedef struct NetworkServerArgs__ {
   uint32_t poolSize;
   uint32_t port;
   uint32_t compressionLevel;
-  int32_t connectTimeout;
+  uint32_t connectTimeout;
   bool isDomainFilter;
   bool isTunnel;
   bool reserved[2];

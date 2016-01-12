@@ -24,8 +24,10 @@ public:
   explicit io_service_pool(std::size_t pool_size = (std::max)(
                                2u, std::thread::hardware_concurrency() * 2))
       : next_io_service_(0) {
-    if (pool_size == 0)
+    if (pool_size == 0) {
+      klogger::Log(klogger::kFatal, "io_service_pool size is 0");
       throw std::runtime_error("io_service_pool size is 0");
+    }
     for (std::size_t i = 0; i < pool_size; ++i) {
       io_service_ptr io_service(new boost::asio::io_service);
       work_ptr work(new boost::asio::io_service::work(*io_service));

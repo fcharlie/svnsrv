@@ -1,3 +1,15 @@
-!/usr/bin/bash
-
-echo "svnsrvd"
+#!/bin/bash
+# stop restart
+PrefixDir=$(cd `dirname $0`; pwd)
+if [ ! -f "$PrefixDir/svnsrv" ]; then
+    echo "cannot find svnsrv in $PrefixDir"
+    exit  1
+fi
+echo "start svnsrv as daemon. If your want to stop svnsrv, enter 'svnsrv -s stop'"
+$PrefixDir/svnsrv -D $@
+svnsrv_pid=`echo $$`
+if [ $svnsrv_pid -eq 0 ]; then
+    echo "cannot start svnsrv, please check log for details"
+else
+    echo "svnsrv starts successfully, then svnsrv.pid should be in your config path"
+fi

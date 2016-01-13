@@ -50,12 +50,14 @@ ATTRIBUTES
 ****/
 size_t Klogger::writerAccess(const char *buffer, size_t size) {
   std::lock_guard<std::mutex> lock(mtxE);
-  return fwrite(buffer, 1, size, logAccess);;
+  return fwrite(buffer, 1, size, logAccess);
+  ;
 }
 
 size_t Klogger::writerError(const char *buffer, size_t size) {
   std::lock_guard<std::mutex> lock(mtxE);
-  return  fwrite(buffer, 1, size, logError);;
+  return fwrite(buffer, 1, size, logError);
+  ;
 }
 
 bool Klogger::init(const char *infoFile, const char *errorFile) {
@@ -76,7 +78,7 @@ void Klogger::fflushE() {
   fflush(logError);
 }
 
-void Klogger::destory(const char *msg) {
+void Klogger::destroy(const char *msg) {
   char buffer[4096];
   auto id = getpid();
   auto tid = pthread_self();

@@ -9,8 +9,9 @@
 #define SVNSRV_DAEMON_H
 
 int Daemonize(const std::string &pidfile);
+bool DaemonWait(int Argc, char **Argv);
 int DaemonSignalMethod();
-int SignalINTActive();
+int ForegroundSignalMethod();
 bool DaemonStop(const std::string &pidFile);
 bool DaemonRestart(const std::string &pidFile);
 

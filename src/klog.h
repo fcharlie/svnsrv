@@ -40,9 +40,9 @@ public:
   Klogger(Klogger &) = delete;
   ~Klogger();
   bool init(const char *infoFile, const char *errorFile = nullptr);
-  void access(const char *fmt, ...);
   void fflushE();
-  void destory(const char *msg);
+  void access(const char *fmt, ...);
+  void destroy(const char *msg);
   void log(KloggerLevel level, const char *fmt, ...);
   static Klogger &instance();
 };
@@ -50,7 +50,7 @@ public:
 #define Access Klogger::instance().access          ///;
 #define Log Klogger::instance().log
 #define FileFlush Klogger::instance().fflushE ////
-#define Destory Klogger::instance().destory
+#define Destroy Klogger::instance().destroy
 #define KLOGGER_VERSION 1
 }
 

@@ -235,8 +235,12 @@ int main(int argc, char **argv) {
     klogger::Log(klogger::kInfo, "svnsrv run as daemon success,pid: %d",
                  getpid());
     klogger::FileFlush();
+    if (!DaemonWait(argc, argv)) {
+      klogger::Log(klogger::kError, "cannot create watcher process!");
+      return -1;
+    }
   } else {
-    SignalINTActive();
+    ForegroundSignalMethod();
   }
 
   // klogger::Log(klogger::kInfo, "Listener address: %s Port: %d",

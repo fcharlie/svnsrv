@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/prctl.h>
 #include <stdint.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -132,30 +133,36 @@ int Daemonize(const std::string &pidfile) {
   return 0;
 }
 
+static pid_t child_pid = 0;
+
 ////////////////////////////////////////////////////////////////////
 /// Daemon Action
 // stop
 void SignalDaemonKill(int sig) {
-  if (mask.Get()) {
-    unlink(mask.Get());
+
+  if (child_pid > 0) {
+    if (mask.Get()) {
+      unlink(mask.Get());
+    }
+    kill(child_pid, SIGUSR1);
+    klogger::Destroy("svnsrv master shutdown");
+  } else {
+    klogger::Destroy("svnsrv worker shutdown");
   }
-  klogger::Destory("svnsrv daemon shutdown");
-  // klogger::Log(klogger::kInfo, "svnsrv daemon shutdown");
-  // klogger::FileFlush();
   _exit(0);
 }
 
 ////////// Ctrl+C
-void ExitSelfEvent(int sig) {
-  klogger::Destory("svnsrv shutdown");
+void ForegroundShutdown(int sig) {
+  klogger::Destroy("svnsrv shutdown");
   // klogger::Log(klogger::kInfo, "svnsrv shutdown");
   // klogger::FileFlush();
   _exit(0);
 }
 
 /////// Register signal
-int SignalINTActive() {
-  signal(SIGINT, ExitSelfEvent);
+int ForegroundSignalMethod() {
+  signal(SIGINT, ForegroundShutdown);
   return 0;
 }
 
@@ -246,4 +253,21 @@ bool DaemonRestart(const std::string &pidFile) {
     return true;
   }
   return false;
+}
+
+bool DaemonWait(int Argc, char **Argv) {
+  int status;
+  int n = 0;
+  prctl(PR_SET_NAME, "svnsrv: master", NULL, NULL, NULL);
+  while ((child_pid = fork())) {
+    if (child_pid < 0) {
+      return false;
+    }
+    waitpid(child_pid, &status, 0);
+    n++;
+    klogger::Log(klogger::kError, "Restart worker process,times: %d", n);
+    child_pid = 0;
+  }
+  prctl(PR_SET_NAME, "svnsrv: worker", NULL, NULL, NULL);
+  return true;
 }

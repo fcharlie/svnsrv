@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 #include <cstdlib>
-#include "SubversionSyntactic.hpp"
+#include "SubversionParse.hpp"
 
 /*
   item   = word / number / string / list
@@ -22,7 +22,7 @@
   space  = 1*(SP / LF)
 */
 
-bool ExchangeCapabilities::Parse(char *str, size_t length) {
+bool HandshakeInfo::Parse(char *str, size_t length) {
   if (str == nullptr || length == 0) {
     lastError.assign("Malformed Network data !,Null of buffer");
     return false;

@@ -12,6 +12,10 @@
 #include <boost/noncopyable.hpp>
 using boost::asio::ip::tcp;
 
+#include "URLTokenizer.hpp"
+#include "SubversionParse.hpp"
+#include "SubversionStorage.hpp"
+
 class SubversionSession
     : public std::enable_shared_from_this<SubversionSession> {
 protected:
@@ -28,6 +32,17 @@ public:
   void stop();
 
 private:
+  void sendError(int errorcode, const char *message, size_t length);
+  void echo_downstream_handshake(const boost::system::error_code &e,
+                                 std::size_t bytes_transferred);
+  void read_downstream_handshake(const boost::system::error_code &e,
+                                 std::size_t bytes_transferred);
+  void async_connect_upstream(const boost::system::error_code &e);
+  void read_upstream_handshake(const boost::system::error_code &e,
+                               std::size_t bytes_transferred);
+  void echo_upstream_handshake(const boost::system::error_code &e,
+                               std::size_t bytes_transferred);
+
   void downstream_read(const boost::system::error_code &e,
                        std::size_t bytes_transferred);
   void downstream_write(const boost::system::error_code &e);
@@ -37,6 +52,9 @@ private:
   boost::asio::io_service::strand strand_;
   tcp::socket socket_;
   tcp::socket backend_;
+  SubversionStorageNode node;
+  HandshakeInfo hinfo;
+  std::size_t handshakeSize;
   char buffer_[kDefaultBufferSize];
   char clt_buffer_[kDefaultBufferSize];
 };

@@ -13,7 +13,7 @@
 
 #define isSpace(c) (c == ' ' || c == '\n')
 
-class ExchangeCapabilities {
+class HandshakeInfo {
 private:
   enum ParseStatus : int {
     kStatusClear = 0,
@@ -30,7 +30,7 @@ private:
   SubversionURL su;
 
 public:
-  ExchangeCapabilities() : baseURL(256, '\0') {}
+  HandshakeInfo() : baseURL(256, '\0') {}
   std::vector<std::string> mCapabilities;
   bool Parse(char *s, size_t length);
   int getProtocolVersion() { return this->protocolVersion; }

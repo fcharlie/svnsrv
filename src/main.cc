@@ -20,6 +20,7 @@
 #include "Daemonize.h"
 #include "SubversionServer.hpp"
 #include "FowardCompatible.hpp"
+#include "Argv.hpp"
 extern FowardDiscoverManager fowardDiscoverManager;
 
 enum ProcessSignalFlow {
@@ -165,6 +166,7 @@ bool ParseServiceProfile(const char *cfile, NetworkServerArgs &na,
 }
 
 int main(int argc, char **argv) {
+  SavedArgv saveArgv(argc, argv);
   const char *short_opt = "?Dc:dhvqs:";
   int ch = 0;
   int opt_index = 0;
@@ -184,8 +186,8 @@ int main(int argc, char **argv) {
                              {"quiet", no_argument, NULL, 'q'},
                              {"signal", required_argument, NULL, 's'},
                              {NULL, 0, 0, 0}};
-  while ((ch = getopt_long(argc, argv, short_opt, longopts, &opt_index)) !=
-         -1) {
+  while ((ch = getopt_long(saveArgv.Argc(), saveArgv.Argv(), short_opt,
+                           longopts, &opt_index)) != -1) {
     switch (ch) {
     case '?':
     case 'h':

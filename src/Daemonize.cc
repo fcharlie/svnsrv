@@ -22,6 +22,7 @@
 #include <vector>
 #include "klog.h"
 #include "Daemonize.h"
+#include "ProcessTitle.hpp"
 
 class ProcessIdMask {
 private:
@@ -269,5 +270,7 @@ bool DaemonWait(int Argc, char **Argv) {
     child_pid = 0;
   }
   prctl(PR_SET_NAME, "svnsrv: worker", NULL, NULL, NULL);
+  initializeProcessEnv(Argc, Argv);
+  changeProcessTitle(Argc, Argv, "svnsrv: worker process");
   return true;
 }

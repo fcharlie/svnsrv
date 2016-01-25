@@ -158,6 +158,7 @@ bool ParseServiceProfile(const char *cfile, NetworkServerArgs &na,
   la.logAccess = Strings("Logger.Access", "/tmp/svnsrv.access.log");
   la.logError = Strings("Logger.Error", "/tmp/svnsrv.error.log");
   la.pidFile = Strings("Daemon.PidFile", "/tmp/svnsrv.pid");
+  la.allowRestart = Boolean("Daemon.AllowRestart", true);
 
   auto tableFile = Strings("Router.RangeFile", "router.toml");
   fowardDiscoverManager.InitializeManager(tableFile.data());
@@ -237,7 +238,7 @@ int main(int argc, char **argv) {
     klogger::Log(klogger::kInfo, "svnsrv run as daemon success,pid: %d",
                  getpid());
     klogger::FileFlush();
-    if (!DaemonWait(argc, argv)) {
+    if (!DaemonWait(argc, argv, launcherArgs.allowRestart)) {
       klogger::Log(klogger::kError, "cannot create watcher process!");
       return -1;
     }

@@ -2,13 +2,14 @@
 #Subversion Protocol Daemon
 [Title]
 Description="svnsrv a subversion client access proxy server,backend git repository"
-Last="2015-11-12"
+Last="2016-01-25"
 Author="Force.Charlie"
 
 [Service]
 PoolSize=32
 
 [Daemon]
+AllowRestart=false
 PidFile="/tmp/svnsrv.pid"
 
 [Logger]

@@ -256,7 +256,12 @@ bool DaemonRestart(const std::string &pidFile) {
   return false;
 }
 
-bool DaemonWait(int Argc, char **Argv) {
+bool DaemonWait(int Argc, char **Argv, bool allowRestart) {
+  if (!allowRestart) {
+    prctl(PR_SET_NAME, "svnsrv: single", NULL, NULL, NULL);
+    child_pid = getpid();
+    return true;
+  }
   int status;
   int n = 0;
   prctl(PR_SET_NAME, "svnsrv: master", NULL, NULL, NULL);

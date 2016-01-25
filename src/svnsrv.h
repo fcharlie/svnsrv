@@ -25,7 +25,7 @@ typedef struct NetworkServerArgs__ {
   uint32_t connectTimeout;
   bool isDomainFilter;
   bool isTunnel;
-  bool reserved[2];
+  uint8_t reserved[2];
   std::string address;
   std::string domain;
 } NetworkServerArgs;
@@ -35,6 +35,8 @@ typedef struct LauncherArgs__ {
   std::string pidFile;
   std::string logAccess;
   std::string logError;
+  bool allowRestart;
+  uint8_t reserved[3];
 } LauncherArgs;
 
 #endif

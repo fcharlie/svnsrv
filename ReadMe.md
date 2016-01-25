@@ -39,7 +39,7 @@ svnsrv 依赖 Boost ，使用 C++ 11 编译器，所以你必须要安装 GCC 4.
 
 在 Ubuntu 上安装依赖：    
 ```sh
-sudo apt-get install libboost-dev libboost-system-dev libboost-thread-dev 
+sudo apt-get install libboost-dev libboost-system-dev libboost-thread-dev
 ```
 构建非常简单：
 >cd src && make
@@ -53,13 +53,14 @@ svnsrv 配置文件：
 #Subversion Protocol Daemon
 [Title]
 Description="svnsrv a subversion client access proxy server,backend git repository"
-Last="2015-11-12"
+Last="2016-01-25"
 Author="Force.Charlie"
 
 [Service]
 PoolSize=32
 
 [Daemon]
+AllowRestart=false
 PidFile="/tmp/svnsrv.pid"
 
 [Logger]
@@ -70,6 +71,7 @@ Error="/tmp/svnsrv.error.log"
 RangeFile="router.toml"
 
 [Network]
+# Timeout=6000
 #if IPv6 0::0
 Address="0.0.0.0"
 Port=3690
@@ -78,6 +80,7 @@ DomainFilter=false
 # Compression 0~9 default 0
 Compression=0
 Tunnel=false
+
 ```
 
 路由文件路径就是 svnsrv.toml 中 Router RangeFile 指定的路径,前文有指出。

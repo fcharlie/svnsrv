@@ -140,15 +140,27 @@ static pid_t child_pid = 0;
 /// Daemon Action
 // stop
 void SignalDaemonKill(int sig) {
-
-  if (child_pid > 0) {
-    if (mask.Get()) {
-      unlink(mask.Get());
-    }
-    kill(child_pid, SIGUSR1);
-    klogger::Destroy("svnsrv master shutdown");
-  } else {
+  switch (child_pid) {
+  case 0:
     klogger::Destroy("svnsrv worker shutdown");
+    break;
+  case -1:
+    if (child_pid > 0) {
+      if (mask.Get()) {
+        unlink(mask.Get());
+      }
+    }
+    klogger::Destroy("svnsrv single shutdown");
+    break;
+  default:
+    if (child_pid > 0) {
+      if (mask.Get()) {
+        unlink(mask.Get());
+      }
+      kill(child_pid, SIGUSR1);
+    }
+    klogger::Destroy("svnsrv master shutdown");
+    break;
   }
   _exit(0);
 }
@@ -259,7 +271,7 @@ bool DaemonRestart(const std::string &pidFile) {
 bool DaemonWait(int Argc, char **Argv, bool allowRestart) {
   if (!allowRestart) {
     prctl(PR_SET_NAME, "svnsrv: single", NULL, NULL, NULL);
-    child_pid = getpid();
+    child_pid = -1;
     return true;
   }
   int status;

@@ -111,3 +111,7 @@ OPTIONS:
 
 重启守护进程：   
 >svnsrv -s restart
+
+##许可协议
+svnsrv 作者 Force Charlie, 许可协议为 MIT       
+© 2016. OSChina.NET. All Rights Reserved.    

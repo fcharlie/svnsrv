@@ -24,6 +24,7 @@
 #include "Daemonize.h"
 #include "ProcessTitle.hpp"
 
+/// cache pidfile ,use RAII
 class ProcessIdMask {
 private:
   char *ptr = nullptr;
@@ -55,6 +56,7 @@ public:
 
 static ProcessIdMask mask;
 
+/// input pidfile path, check pid is runing
 static int check_pid(const char *pidfile) {
   int pid = 0;
   FILE *fp = fopen(pidfile, "r");
@@ -70,6 +72,7 @@ static int check_pid(const char *pidfile) {
   return pid;
 }
 
+// store pid to pidfile
 static bool write_pid(const char *pidfile) {
   FILE *fp = nullptr;
   if ((fp = fopen(pidfile, "w+")) == nullptr) {
@@ -80,7 +83,7 @@ static bool write_pid(const char *pidfile) {
   fclose(fp);
   return true;
 }
-
+/// create a daemon process, result 0 success
 int Daemonize(const std::string &pidfile) {
   auto pid = check_pid(pidfile.c_str());
   if (pid != 0) {
@@ -134,11 +137,18 @@ int Daemonize(const std::string &pidfile) {
   return 0;
 }
 
+/*
+* child_pid, this static global value,
+* process is single,child_pid equal -1
+* process is master, child_pid is a process pid
+* process is worker, child_pid equal 0
+*/
 static pid_t child_pid = 0;
 
-////////////////////////////////////////////////////////////////////
-/// Daemon Action
-// stop
+/*
+* SignalDaemonKill
+* kill single or master/worker process
+*/
 void SignalDaemonKill(int sig) {
   switch (child_pid) {
   case 0:
@@ -165,27 +175,34 @@ void SignalDaemonKill(int sig) {
   _exit(0);
 }
 
-////////// Ctrl+C
+/*
+* Ctrl+C signal ,callback function
+*/
 void ForegroundShutdown(int sig) {
   klogger::Destroy("svnsrv shutdown");
-  // klogger::Log(klogger::kInfo, "svnsrv shutdown");
-  // klogger::FileFlush();
   _exit(0);
 }
 
-/////// Register signal
+/*
+* Register Ctrl+C, when process not daemon
+*/
 int ForegroundSignalMethod() {
   signal(SIGINT, ForegroundShutdown);
   return 0;
 }
 
+/*
+* DaemonSignalMethod, when start a daemon process, register SIGUSR1
+*/
 int DaemonSignalMethod() {
-  ///
   signal(SIGUSR1, SignalDaemonKill);
-  // signal(SIGUSR2, SignalDaemonRestart);
   return 0;
 }
 
+/*
+* DaemonStop stop daemon process, send SIGUSR1 signal to daemon
+* svnsrv -s stop
+*/
 bool DaemonStop(const std::string &pidFile) {
   int l = 1;
   auto pid = check_pid(pidFile.c_str());
@@ -200,6 +217,12 @@ bool DaemonStop(const std::string &pidFile) {
   return l == 0;
 }
 
+/*
+* Parse Process Commandline, require /proc filesystem
+* daemon process: master and single can use, but worker process cannot resolve
+* argv
+* result true success
+*/
 static bool ParsePathAndArgv(pid_t pid, std::string &path, char *buf,
                              size_t bufsize, std::vector<char *> &Argv_) {
   char filename[32];
@@ -229,6 +252,15 @@ static bool ParsePathAndArgv(pid_t pid, std::string &path, char *buf,
   return true;
 }
 
+/*
+* DaemonRestart
+* 1. Parse daemon master or single process cmdline
+* 2. kill SIGUSR1 to master or single
+* 3. fork a child process
+* 4. child process execv argv
+* 5. parent process wait child process exit, and check new daemon is runing
+* Restart Daemon
+*/
 bool DaemonRestart(const std::string &pidFile) {
   auto pid = check_pid(pidFile.c_str());
   if (pid == 0) {
@@ -268,6 +300,14 @@ bool DaemonRestart(const std::string &pidFile) {
   return false;
 }
 
+/*
+* DaemonWait
+* allowRestart if true ,daemon run as master-worker
+* else run as single process
+* master wait worker process pid, when worker core dumped(maybe killed), reset
+* child_pid , and fork new process.
+* change worker process title
+*/
 bool DaemonWait(int Argc, char **Argv, bool allowRestart) {
   if (!allowRestart) {
     prctl(PR_SET_NAME, "svnsrv: single", NULL, NULL, NULL);

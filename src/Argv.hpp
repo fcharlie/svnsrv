@@ -11,6 +11,11 @@
 #include <cstdlib>
 #include <cstring>
 
+/*
+* SavedArgv RAII based Argv class
+* when some one change process title, argv has been changed
+* but app require parse argv
+*/
 class SavedArgv {
 private:
   std::vector<char *> Argvs;
@@ -24,7 +29,6 @@ public:
     }
   }
   ~SavedArgv() {
-    ////
     for (auto &a : Argvs) {
       std::free(a);
     }

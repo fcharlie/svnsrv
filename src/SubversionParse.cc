@@ -22,9 +22,13 @@
   space  = 1*(SP / LF)
 */
 
+/*
+* Parse subversion handshake information
+* TODO  The function to be optimized
+*/
 bool HandshakeInfo::Parse(char *str, size_t length) {
   if (str == nullptr || length == 0) {
-    lastError.assign("Malformed Network data !,Null of buffer");
+    lastError.assign("Malformed Network data , Buffer is NULL !");
     return false;
   }
   int depth = 0;

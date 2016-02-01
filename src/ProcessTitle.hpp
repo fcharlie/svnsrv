@@ -16,6 +16,9 @@
 
 static char *lastArgv;
 
+/*
+* relayout environ
+*/
 bool initializeProcessEnv(int argc, char **argv) {
   extern char **environ;
   char *p;
@@ -24,7 +27,6 @@ bool initializeProcessEnv(int argc, char **argv) {
   for (; environ[i]; i++) {
     size += strlen(environ[i]) + 1;
   }
-  //// malloc
   p = (char *)malloc(size);
   if (p == nullptr) {
     return false;
@@ -37,7 +39,6 @@ bool initializeProcessEnv(int argc, char **argv) {
       lastArgv = argv[i] + strlen(argv[i]) + 1;
     }
   }
-  /////////////////
   for (i = 0; environ[i]; i++) {
     if (lastArgv == environ[i]) {
       size = strlen(environ[i]) + 1;
@@ -51,6 +52,9 @@ bool initializeProcessEnv(int argc, char **argv) {
   return true;
 }
 
+/*
+* change process title
+*/
 void changeProcessTitle(int argc, char **argv, const char *title) {
   char *p;
   argv[1] = NULL;

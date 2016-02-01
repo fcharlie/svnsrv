@@ -11,6 +11,8 @@
 #include "cpptoml.h"
 #include "FowardCompatible.hpp"
 
+// Parse Range to index
+// --zz left -- convert to ushort, right zz to ushort
 static bool RangeToIndex(const char *range, uint16_t &l, uint16_t &r) {
   uint8_t in[8] = "--zz";
   uint8_t *p = in;
@@ -41,6 +43,7 @@ static bool RangeToIndex(const char *range, uint16_t &l, uint16_t &r) {
   return false;
 }
 
+/// Initialize Router DiscoverManager
 bool FowardDiscoverManager::InitializeManager(const char *tableFile) {
   std::shared_ptr<cpptoml::table> g;
   try {
@@ -87,6 +90,7 @@ bool FowardDiscoverManager::InitializeManager(const char *tableFile) {
   return true;
 }
 
+/// Parse user Magic Path , convert ushort , get ip from FowardDiscoverManager
 bool FowardDiscoverManager::GetAddress(const std::string &owner,
                                        std::string &address) {
   if (owner.size() < 2)
@@ -103,5 +107,5 @@ bool FowardDiscoverManager::GetAddress(const std::string &owner,
   address = defaultElement_;
   return true;
 }
-
+// static context
 FowardDiscoverManager fowardDiscoverManager;

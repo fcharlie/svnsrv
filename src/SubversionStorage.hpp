@@ -9,7 +9,7 @@
 #define SVNSRV_SUBVERSION_BACKEND_HPP
 
 #include <string>
-#include "URLTokenizer.hpp"
+#include "SubversionHds.hpp"
 
 struct SubversionStorageNode {
   int port;

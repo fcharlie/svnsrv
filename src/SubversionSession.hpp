@@ -12,8 +12,7 @@
 #include <boost/noncopyable.hpp>
 using boost::asio::ip::tcp;
 
-#include "URLTokenizer.hpp"
-#include "SubversionParse.hpp"
+#include "SubversionHds.hpp"
 #include "SubversionStorage.hpp"
 
 class SubversionSession
@@ -53,7 +52,8 @@ private:
   tcp::socket socket_;
   tcp::socket backend_;
   SubversionStorageNode node;
-  HandshakeInfo hinfo;
+  SubversionHds hds;
+  SubversionURL subversionURL;
   std::size_t handshakeSize;
   char buffer_[kDefaultBufferSize];
   char clt_buffer_[kDefaultBufferSize];

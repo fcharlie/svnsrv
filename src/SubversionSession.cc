@@ -14,7 +14,7 @@
 #include <string.h>
 #include <iostream>
 #include "svnsrv.h"
-#include "URLTokenizer.hpp"
+//#include "URLTokenizer.hpp"
 #include "SubversionStorage.hpp"
 #include "SubversionSession.hpp"
 #include "klog.h"
@@ -94,24 +94,28 @@ void SubversionSession::read_downstream_handshake(
     const boost::system::error_code &e, std::size_t bytes_transferred) {
   if (!e) {
     handshakeSize = bytes_transferred;
-    if (!hinfo.Parse(clt_buffer_, handshakeSize)) {
-      sendError(210004, hinfo.getLastErrorMessage().c_str(),
-                hinfo.getLastErrorMessage().size());
+
+    if (ParseSubversionHds(clt_buffer_, bytes_transferred, hds) != 0) {
+      sendError(210004, hds.lastError.c_str(), hds.lastError.size());
       return;
     }
-    auto svnurl = hinfo.getSubversionURL();
+    SubversionURL svnurl;
+    if (SubversionUriCanonicalize(hds.subversionURL, svnurl) != 0) {
+      sendError(210004, hds.lastError.c_str(), hds.lastError.size());
+      return;
+    }
 
     if (!DiscoverStorageNode(svnurl, node) || node.address.empty()) {
       klogger::Log(klogger::kError,
                    "Cannot found Storage machine address, URL:%s",
-                   hinfo.getBaseURL().c_str());
+                   hds.subversionURL.c_str());
       const char msg[] = "Cannot found Storage machine address ";
       sendError(200042, msg, sizeof(msg) - 1);
       return;
     }
 
     klogger::Access("Storage: %s | URL: %s ", node.address.c_str(),
-                    hinfo.getBaseURL().c_str());
+                    hds.subversionURL.c_str());
 
     boost::system::error_code ec;
     tcp::endpoint upstream_point(
@@ -157,7 +161,7 @@ void SubversionSession::read_upstream_handshake(
                     boost::asio::placeholders::bytes_transferred));
   } else {
     klogger::Log(klogger::kError, "Cannot read storage ,URL: %S ,Address: %s",
-                 hinfo.getBaseURL().c_str(), node.address.c_str());
+                 hds.subversionURL.c_str(), node.address.c_str());
     sendError(200042, "Storage server is not available",
               sizeof("Storage server is not available") - 1);
   }
@@ -180,7 +184,7 @@ void SubversionSession::echo_upstream_handshake(
   } else {
     klogger::Log(klogger::kError,
                  "Echo handshake to storage failure ,URL: %s, Storage: %s",
-                 hinfo.getBaseURL().c_str(), node.address.c_str());
+                 hds.subversionURL.c_str(), node.address.c_str());
     backend_.cancel();
     sendError(200042, "Echo handshake to storage failure",
               sizeof("Echo handshake to storage failure") - 1);

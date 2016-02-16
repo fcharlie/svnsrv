@@ -59,7 +59,7 @@ bool RouterSeletor::InitializeManager(const char *tableFile) {
 
   if (g->contains_qualified("Host.port")) {
     auto i64 = g->get_qualified("Host.port")->as<int64_t>()->get();
-    defaultPort_ = static_cast<int>(i64);
+    defaultPort_ = static_cast<uint16_t>(i64);
   } else {
     defaultPort_ = 3690;
   }

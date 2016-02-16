@@ -31,7 +31,7 @@ class RouterSeletor {
 private:
   std::vector<HostElement> hostElement_;
   std::string defaultElement_;
-  int defaultPort_;
+  uint16_t defaultPort_;
 
 public:
   bool InitializeManager(const char *tableFile);

@@ -21,7 +21,6 @@
 #include "SubversionServer.hpp"
 #include "RouterSeletor.hpp"
 #include "Argv.hpp"
-extern RouterSeletor routerSeletor;
 
 enum ProcessSignalFlow {
   kRequireExit = 0,
@@ -249,7 +248,5 @@ int main(int argc, char **argv) {
     ForegroundSignalMethod();
   }
 
-  // klogger::Log(klogger::kInfo, "Listener address: %s Port: %d",
-  //              networkArgs.address.c_str(), networkArgs.port);
   return SubversionServerInitialize(networkArgs);
 }

@@ -164,6 +164,7 @@ bool ParseServiceProfile(const char *cfile, NetworkServerArgs &na,
 
   if (!InitializeRouterSeletor(tableFile)) {
     perror("Initialize router seletor failed !");
+    return false;
   }
   return true;
 }

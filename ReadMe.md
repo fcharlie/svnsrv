@@ -31,10 +31,12 @@ old_subver=0
 range="A"
 address="192.168.1.12"
 enbale=true
+port=3690
 [[Host.Content]]
 range="B~D"
 address="192.168.1.13"
 enbale=true
+port=3691
 [[Host.Content]]
 range="E~Zz"
 address="192.168.1.14"
@@ -45,8 +47,10 @@ address="192.168.1.15"
 enbale=true
 ```
 
-Host.address 是默认机器的地址，port 是后端服务的的地址，这里通常是3690， Host.Content 是数组，如果为空，或者查询用户 Magic Path      
-区间查不到，那么将选择默认的地址也就是 Host 下的 address.         
+Host.address 是默认机器的地址，port 是后端服务的的地址，这里通常是3690，如果要设置每一个 svn 服务的端口，需要在指定的数组中设置端口,
+Host.Content 是数组，如果为空，将使用默认的存储机器和端口。
+
+用户 magic path 如果无法匹配所有区间，那么将选择默认的地址也就是 Host 下的 address.         
 
 ##运行
 在运行 svnsrv 前，先得设置号 svnsrv.toml 配置文件，svnsrv.toml 搜索路径为进程所在目录，Home 目录下的 .svnsrv/ 。    

@@ -91,6 +91,8 @@ bool RouterSeletor::InitializeManager(const char *tableFile) {
     }
     hostElement_.push_back(std::move(e));
   }
+  if (defaultElement_.empty() && hostElement_.empty())
+    return false;
   return true;
 }
 

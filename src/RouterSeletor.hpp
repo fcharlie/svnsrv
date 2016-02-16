@@ -14,7 +14,8 @@
 #endif
 
 struct StorageElement {
-  int port;
+  uint16_t port;
+  uint8_t reserved[2];
   std::string address;
 };
 struct HostElement {
@@ -22,7 +23,7 @@ struct HostElement {
   uint16_t end;
   uint16_t port;
   bool enabled;
-  char reserved;
+  uint8_t reserved;
   std::string address;
 };
 

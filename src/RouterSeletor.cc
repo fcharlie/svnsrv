@@ -5,11 +5,9 @@
 * Date: 2015.12
 * Copyright (C) 2016. OSChina.NET. All Rights Reserved.
 */
-#include <string>
-#include <vector>
-#include <iostream>
 #include "cpptoml.h"
-#include "FowardCompatible.hpp"
+#include "SubversionHds.hpp"
+#include "RouterSeletor.hpp"
 
 // Parse Range to index
 // --zz left -- convert to ushort, right zz to ushort
@@ -44,7 +42,7 @@ static bool RangeToIndex(const char *range, uint16_t &l, uint16_t &r) {
 }
 
 /// Initialize Router DiscoverManager
-bool FowardDiscoverManager::InitializeManager(const char *tableFile) {
+bool RouterSeletor::InitializeManager(const char *tableFile) {
   std::shared_ptr<cpptoml::table> g;
   try {
     g = cpptoml::parse_file(tableFile);
@@ -61,9 +59,9 @@ bool FowardDiscoverManager::InitializeManager(const char *tableFile) {
 
   if (g->contains_qualified("Host.port")) {
     auto i64 = g->get_qualified("Host.port")->as<int64_t>()->get();
-    hostPort = static_cast<int>(i64);
+    defaultPort_ = static_cast<int>(i64);
   } else {
-    hostPort = 3690;
+    defaultPort_ = 3690;
   }
 
   auto ta = g->get_table_array_qualified("Host.Content");
@@ -80,32 +78,51 @@ bool FowardDiscoverManager::InitializeManager(const char *tableFile) {
     auto range = t->get_qualified("range")->as<std::string>()->get();
     RangeToIndex(range.c_str(), e.begin, e.end);
     e.address = t->get_qualified("address")->as<std::string>()->get();
-    if (t->contains_qualified("enable")) {
-      e.IsEnabled = t->get_qualified("enable")->as<bool>()->get();
+    if (t->contains_qualified("port")) {
+      e.port =
+          static_cast<uint16_t>(t->get_qualified("port")->as<int64_t>()->get());
     } else {
-      e.IsEnabled = true;
+      e.port = 3690;
+    }
+    if (t->contains_qualified("enable")) {
+      e.enabled = t->get_qualified("enable")->as<bool>()->get();
+    } else {
+      e.enabled = true;
     }
     hostElement_.push_back(std::move(e));
   }
   return true;
 }
 
-/// Parse user Magic Path , convert ushort , get ip from FowardDiscoverManager
-bool FowardDiscoverManager::GetAddress(const std::string &owner,
-                                       std::string &address) {
+/// Parse user Magic Path , convert ushort , get ip from RouterSeletor
+bool RouterSeletor::GetAddress(const std::string &owner, StorageElement &elem) {
   if (owner.size() < 2)
     return false;
   uint16_t index = (uint16_t)owner[0] * 0x200 + owner[1];
   for (auto &e : hostElement_) {
     if (index >= e.begin && index <= e.end) {
-      if (e.IsEnabled) {
-        address = e.address;
+      if (e.enabled) {
+        elem.address = e.address;
+        elem.port = e.port;
         return true;
       }
     }
   }
-  address = defaultElement_;
+  elem.address = defaultElement_;
+  elem.port = defaultPort_;
   return true;
 }
+
 // static context
-FowardDiscoverManager fowardDiscoverManager;
+static RouterSeletor routerSeletor;
+
+bool InitializeRouterSeletor(const std::string &file) {
+  if (file.empty()) {
+    return false;
+  }
+  return routerSeletor.InitializeManager(file.data());
+}
+
+bool GetStorageElement(const SubversionURL &su, StorageElement &elem) {
+  return routerSeletor.GetAddress(su.owner, elem);
+}

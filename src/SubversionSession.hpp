@@ -13,7 +13,7 @@
 using boost::asio::ip::tcp;
 
 #include "SubversionHds.hpp"
-#include "SubversionStorage.hpp"
+#include "RouterSeletor.hpp"
 
 class SubversionSession
     : public std::enable_shared_from_this<SubversionSession> {
@@ -51,7 +51,7 @@ private:
   boost::asio::io_service::strand strand_;
   tcp::socket socket_;
   tcp::socket backend_;
-  SubversionStorageNode node;
+  StorageElement node;
   SubversionHds hds;
   SubversionURL subversionURL;
   std::size_t handshakeSize;

@@ -19,9 +19,9 @@
 #include "svnsrv.h"
 #include "Daemonize.h"
 #include "SubversionServer.hpp"
-#include "FowardCompatible.hpp"
+#include "RouterSeletor.hpp"
 #include "Argv.hpp"
-extern FowardDiscoverManager fowardDiscoverManager;
+extern RouterSeletor routerSeletor;
 
 enum ProcessSignalFlow {
   kRequireExit = 0,
@@ -161,8 +161,10 @@ bool ParseServiceProfile(const char *cfile, NetworkServerArgs &na,
   la.allowRestart = Boolean("Daemon.AllowRestart", true);
 
   auto tableFile = Strings("Router.RangeFile", "router.toml");
-  fowardDiscoverManager.InitializeManager(tableFile.data());
 
+  if (!InitializeRouterSeletor(tableFile)) {
+    perror("Initialize router seletor failed !");
+  }
   return true;
 }
 

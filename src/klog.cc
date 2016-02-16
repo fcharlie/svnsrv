@@ -9,6 +9,7 @@
 #include <ctime>
 #include <cstdarg>
 #include <chrono>
+#include <unistd.h>
 #include "klog.h"
 using namespace klogger;
 
@@ -106,7 +107,7 @@ void Klogger::access(const char *fmt, ...) {
   auto t =
       std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   auto tm = std::localtime(&t);
-  auto len = snprintf(buffer, 4095, "[%d/%d/%d %s %d:%d:%d] ",
+  auto len = snprintf(buffer, 4095, "[%d/%02d/%02d %s %02d:%02d:%02d] ",
                       (1900 + tm->tm_year), tm->tm_mon + 1, tm->tm_mday,
                       (wday[tm->tm_wday]), tm->tm_hour, tm->tm_min, tm->tm_sec);
   char *p = buffer + len;
@@ -128,7 +129,8 @@ void Klogger::log(KloggerLevel level, const char *fmt, ...) {
       std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   auto tm = std::localtime(&t);
   auto len = snprintf(
-      buffer, 4095, "[%s] Process: %d Thread: %zu Time: %d/%d/%d %s %d:%d:%d ",
+      buffer, 4095,
+      "[%s] Process: %d Thread: %zu Time: %d/%02d/%02d %s %02d:%02d:%02d ",
       leveMessage[level], id, tid, (1900 + tm->tm_year), tm->tm_mon + 1,
       tm->tm_mday, wday[tm->tm_wday], tm->tm_hour, tm->tm_min, tm->tm_sec);
   char *p = buffer + len;

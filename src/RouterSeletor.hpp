@@ -7,26 +7,37 @@
 */
 #ifndef SVNSRV_FOWARDCOMPATIBLE_HPP
 #define SVNSRV_FOWARDCOMPATIBLE_HPP
-
+#include <string>
 #include <vector>
+#ifndef SUBVERSION_HANDSAKE_HPP
+#include "SubversionHds.hpp"
+#endif
 
+struct StorageElement {
+  int port;
+  std::string address;
+};
 struct HostElement {
   uint16_t begin;
   uint16_t end;
-  bool IsEnabled;
-  char reserved[3];
+  uint16_t port;
+  bool enabled;
+  char reserved;
   std::string address;
 };
-class FowardDiscoverManager {
+
+class RouterSeletor {
 private:
   std::vector<HostElement> hostElement_;
   std::string defaultElement_;
-  int hostPort;
+  int defaultPort_;
 
 public:
   bool InitializeManager(const char *tableFile);
-  bool GetAddress(const std::string &owner, std::string &address);
-  int GetHostPort() { return hostPort; }
+  bool GetAddress(const std::string &owner, StorageElement &elem);
 };
+
+bool InitializeRouterSeletor(const std::string &file);
+bool GetStorageElement(const SubversionURL &su, StorageElement &elem);
 
 #endif

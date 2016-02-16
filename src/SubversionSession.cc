@@ -5,34 +5,20 @@
 * Date: 2015.11
 * Copyright (C) 2016. OSChina.NET. All Rights Reserved.
 */
+#include <cstring>
 #include <string>
 #include <array>
 #include <memory>
 #include <functional>
 #include <algorithm>
-#include <iostream>
-#include <string.h>
-#include <iostream>
 #include "svnsrv.h"
-//#include "URLTokenizer.hpp"
-#include "SubversionStorage.hpp"
+#include "SubversionHds.hpp"
 #include "SubversionSession.hpp"
 #include "klog.h"
-/**
-*    origin client <---> svnsrv <---> sserver
-step 1.   origin  receive server capacity
-step 2.   origin send request header to  svnsrv
-step 3.   svnsrv parse request header,cache this header ,get domain,repository
-owner user, query ip
-step 4.   svnsrv create socket use this ip
-step 5.    svnsrv receive sserver capacity, discard
-step 6.    svnsrv send cached header, send to sserver,
-step 7.    svnsrv transfer begin.
-*
-**/
+
 SubversionSession::SubversionSession(boost::asio::io_service &io_service)
     : strand_(io_service), socket_(io_service), backend_(io_service) {
-  /////
+  // empty
 }
 
 void SubversionSession::stop() {
@@ -105,7 +91,7 @@ void SubversionSession::read_downstream_handshake(
       return;
     }
 
-    if (!DiscoverStorageNode(svnurl, node) || node.address.empty()) {
+    if (!GetStorageElement(svnurl, node) || node.address.empty()) {
       klogger::Log(klogger::kError,
                    "Cannot found Storage machine address, URL:%s",
                    hds.subversionURL.c_str());

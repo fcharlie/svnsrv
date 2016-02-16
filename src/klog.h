@@ -9,7 +9,6 @@
 #define MIRACLE_KLOG_H
 #include <cstdio>
 #include <cstdlib>
-#include <unistd.h>
 #include <string>
 #include <mutex>
 

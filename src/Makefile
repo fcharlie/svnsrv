@@ -23,8 +23,7 @@ ADDLIB=  -lboost_system -lboost_thread  -lpthread
 
 PROJECTNAME=svnsrv
 
-OBJECTS=main.o Daemonize.o SubversionServer.o SubversionSession.o SubversionHds.o \
-SubversionStorage.o FowardCompatible.o klog.o
+OBJECTS=main.o Daemonize.o SubversionServer.o SubversionSession.o SubversionHds.o RouterSeletor.o klog.o
 
 
 all:$(PROJECTNAME)

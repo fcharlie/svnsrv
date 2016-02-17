@@ -37,6 +37,9 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="svnsrv.rc" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{CE4D2654-39E2-4B7D-8032-9531BB78BE0A}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

@@ -136,7 +136,7 @@ int main(int argc, char **argv) {
     return ProcessSignalArgs(signame, launcherArgs);
   }
   (void)debug;
- /* if (daemon) {
+  if (daemon) {
     DaemonSignalMethod();
     if (Daemonize(launcherArgs.pidFile) != 0) {
       klogger::Log(klogger::kError, "cannot create svnsrv daemon,this pid= %d",
@@ -154,6 +154,6 @@ int main(int argc, char **argv) {
   } else {
     ForegroundSignalMethod();
   }
-*/
+
   return SubversionServerInitialize(networkArgs);
 }

@@ -1,0 +1,31 @@
+#svnsrv.toml
+#Subversion Protocol Daemon
+[Title]
+Description="svnsrv a subversion client access proxy server,backend git repository"
+Last="2015-11-12"
+Author="Force.Charlie"
+
+[Service]
+PoolSize=32
+
+[Daemon]
+AllowRestart=true
+PidFile="svnsrv.pid"
+
+[Logger]
+Access="svnsrv.access.log"
+Error="svnsrv.error.log"
+
+[Router]
+RangeFile="router.toml"
+
+[Network]
+Timeout=6000
+#if IPv6 0::0
+Address="0.0.0.0"
+Port=3690
+Domain="git.oschina.net"
+DomainFilter=false
+# Compression 0~9 default 0
+Compression=0
+Tunnel=false

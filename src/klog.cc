@@ -10,26 +10,8 @@
 #include <cstdarg>
 #include <chrono>
 #include "klog.h"
-
-#ifdef _WIN32
-// windows
-#include <windows.h>
-#ifdef __MSC_VER
-#include <sdkddkver.h>
-#if defined(_WIN32_WINNT_WIN8) && defined(_WIN32_WINNT) &&                     \
-    _WIN32_WINNT >= _WIN32_WINNT_WIN8
-#include <Processthreadsapi.h>
-#endif
-#endif
-///
-#else
-// posix
-#include <unistd.h>
-#include <pthread.h>
-#define GetCurrentProcessId getpid
-#define GetCurrentThreadId pthread_self
-
-#endif
+#include "Runtime.hpp"
+#include <inttypes.h>
 
 using namespace klogger;
 
@@ -86,12 +68,12 @@ void Klogger::fflushE() {
 void Klogger::destroy(const char *msg) {
   char buffer[4096];
   auto id = GetCurrentProcessId();
-  auto tid = GetCurrentThreadId();
+  uint64_t tid = GetCurrentThreadId();
   auto t =
       std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   auto tm = std::localtime(&t);
   auto len =
-      snprintf(buffer, 4096, "[Info] Process: %d Thread: %zu Time: "
+	  snprintf(buffer, 4096, "[Info] Process: %d Thread: %" PRIu64 " Time: "
                              "%d/%02d/%02d %s %02d:%02d:%02d %s\n",
                id, tid, (1900 + tm->tm_year), tm->tm_mon + 1, tm->tm_mday,
                wday[tm->tm_wday], tm->tm_hour, tm->tm_min, tm->tm_sec, msg);
@@ -127,14 +109,14 @@ void Klogger::access(const char *fmt, ...) {
 
 void Klogger::log(KloggerLevel level, const char *fmt, ...) {
   char buffer[4096];
-  size_t tid = GetCurrentThreadId();
+  uint64_t tid = GetCurrentThreadId();
   auto id = GetCurrentProcessId();
   auto t =
       std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   auto tm = std::localtime(&t);
   auto len = snprintf(
       buffer, 4095,
-      "[%s] Process: %d Thread: %zu Time: %d/%02d/%02d %s %02d:%02d:%02d ",
+	  "[%s] Process: %d Thread: %" PRIu64 " Time: %d/%02d/%02d %s %02d:%02d:%02d ",
       leveMessage[level], id, tid, (1900 + tm->tm_year), tm->tm_mon + 1,
       tm->tm_mday, wday[tm->tm_wday], tm->tm_hour, tm->tm_min, tm->tm_sec);
   char *p = buffer + len;

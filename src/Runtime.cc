@@ -30,7 +30,7 @@ public:
     raw_ = new char[iTextLen + 1];
     if (raw_ == nullptr)
       return;
-    str[iTextLen] = 0;
+    raw_[iTextLen] = 0;
     WideCharToMultiByte(CP_ACP, 0, wstr, -1, raw_, iTextLen, NULL, NULL);
   }
   ~CharacterA() {
@@ -62,7 +62,7 @@ bool GetProcessImageFileFolder(std::string &dir) {
 bool PathFileIsExists(const std::string &path) {
   if (path.empty())
     return false;
-  return PathFileExistsA(path.c_str());
+  return PathFileExistsA(path.c_str())==TRUE;
 }
 
 // SHGetKnownFolderPath:

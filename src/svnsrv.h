@@ -8,7 +8,7 @@
 
 #ifndef MIRACLE_SVNSRV_H
 #define MIRACLE_SVNSRV_H
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 
 /*

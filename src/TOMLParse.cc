@@ -10,20 +10,20 @@
 #include "Runtime.hpp"
 
 #ifdef _WIN32
-
+#include <windows.h>
 class CharacterFlip {
 private:
   char *str = nullptr;
 
 public:
-  CharacterFlip(char *u8) {
+  CharacterFlip(const char *u8) {
     if (u8 == nullptr)
       return;
     // to wide char
     int unicodeLen = ::MultiByteToWideChar(CP_UTF8, 0, u8, -1, NULL, 0);
     if (unicodeLen == 0)
       return;
-    wstr = new wchar_t[unicodeLen + 1];
+    wchar_t *wstr = new wchar_t[unicodeLen + 1];
     if (wstr == nullptr)
       return;
     wstr[unicodeLen] = 0;

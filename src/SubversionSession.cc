@@ -12,9 +12,15 @@
 #include <functional>
 #include <algorithm>
 #include "svnsrv.h"
+#include "Runtime.hpp"
 #include "SubversionHds.hpp"
 #include "SubversionSession.hpp"
 #include "klog.h"
+#include <inttypes.h>
+
+#if defined(_MSC_VER)&&_MSC_VER<=1800
+#define snprintf _snprintf
+#endif
 
 SubversionSession::SubversionSession(boost::asio::io_service &io_service)
     : strand_(io_service), socket_(io_service), backend_(io_service) {
@@ -46,10 +52,10 @@ void SubversionSession::start() {
                   boost::asio::placeholders::bytes_transferred));
 }
 
-void SubversionSession::sendError(int eid, const char *msg, size_t length) {
+void SubversionSession::sendError(int eid, const char *msg, uint32_t length) {
   auto self(shared_from_this());
   auto ml = snprintf(buffer_, length + 64,
-                     "( failure ( ( %d %zu:%s 0: 0 ) ) ) ", eid, length, msg);
+					 "( failure ( ( %d %" PRIu32 ":%s 0: 0 ) ) ) ", eid, length, msg);
   socket_.async_write_some(
       boost::asio::buffer(buffer_, ml),
       [this, self](boost::system::error_code ec, std::size_t) {

@@ -18,6 +18,7 @@
 #include "TOMLParse.hpp"
 #include "SubversionServer.hpp"
 #include "RouterSeletor.hpp"
+#include "Runtime.hpp"
 #include "Argv.hpp"
 
 enum ProcessSignalFlow {
@@ -135,16 +136,16 @@ int main(int argc, char **argv) {
     return ProcessSignalArgs(signame, launcherArgs);
   }
   (void)debug;
-  if (daemon) {
+ /* if (daemon) {
     DaemonSignalMethod();
     if (Daemonize(launcherArgs.pidFile) != 0) {
       klogger::Log(klogger::kError, "cannot create svnsrv daemon,this pid= %d",
-                   getpid());
+                   GetCurrentProcessId());
       klogger::FileFlush();
       return -1;
     }
     klogger::Log(klogger::kInfo, "svnsrv run as daemon success,pid: %d",
-                 getpid());
+				 GetCurrentProcessId());
     klogger::FileFlush();
     if (!DaemonWait(argc, argv, launcherArgs.allowRestart)) {
       klogger::Log(klogger::kError, "cannot create watcher process!");
@@ -153,6 +154,6 @@ int main(int argc, char **argv) {
   } else {
     ForegroundSignalMethod();
   }
-
+*/
   return SubversionServerInitialize(networkArgs);
 }

@@ -55,30 +55,14 @@ Klogger::~Klogger() {
   }
 }
 
-/**
-ReadMe:
-ATTRIBUTES
-       For an explanation of the terms used in this section, see
-       ┌──────────────────┬───────────────┬─────────┐
-       │Interface         │ Attribute     │ Value   │
-       ├──────────────────┼───────────────┼─────────┤
-       │fread(), fwrite() │ Thread safety │ MT-Safe │
-       └──────────────────┴───────────────┴─────────┘
-       BSD Linux also Thread Safe
-
-       Why not also use Atom Lock?
-       Because, File Lock use too long time,and cannot rename Log File
-****/
 size_t Klogger::writerAccess(const char *buffer, size_t size) {
   std::lock_guard<std::mutex> lock(mtxE);
   return fwrite(buffer, 1, size, logAccess);
-  ;
 }
 
 size_t Klogger::writerError(const char *buffer, size_t size) {
   std::lock_guard<std::mutex> lock(mtxE);
   return fwrite(buffer, 1, size, logError);
-  ;
 }
 
 bool Klogger::init(const char *infoFile, const char *errorFile) {

@@ -5,14 +5,12 @@
 * Date: 2015.11
 * Copyright (C) 2016. OSChina.NET. All Rights Reserved.
 */
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdarg.h>
-#include <string.h>
-#include <unistd.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstdint>
+#include <cstdarg>
+#include <cstring>
 #include <sys/stat.h>
-#include <getopt.h>
 #include "cpptoml.h"
 #include "klog.h"
 #include "version.h"
@@ -162,7 +160,7 @@ bool ParseServiceProfile(const char *cfile, NetworkServerArgs &na,
   auto tableFile = Strings("Router.RangeFile", "router.toml");
 
   if (!InitializeRouterSeletor(tableFile)) {
-    perror("Initialize router seletor failed !");
+    // perror("Initialize router seletor failed !");
     return false;
   }
   return true;

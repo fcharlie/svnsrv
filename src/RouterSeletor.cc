@@ -8,6 +8,26 @@
 #include "cpptoml.h"
 #include "SubversionHds.hpp"
 #include "RouterSeletor.hpp"
+// defined
+struct HostElement {
+  uint16_t begin;
+  uint16_t end;
+  uint16_t port;
+  bool enabled;
+  uint8_t reserved;
+  std::string address;
+};
+
+class RouterSeletor {
+private:
+  std::vector<HostElement> hostElement_;
+  std::string defaultElement_;
+  uint16_t defaultPort_;
+
+public:
+  bool InitializeManager(const char *tableFile);
+  bool GetAddress(const std::string &owner, StorageElement &elem);
+};
 
 // Parse Range to index
 // --zz left -- convert to ushort, right zz to ushort

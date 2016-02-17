@@ -18,25 +18,6 @@ struct StorageElement {
   uint8_t reserved[2];
   std::string address;
 };
-struct HostElement {
-  uint16_t begin;
-  uint16_t end;
-  uint16_t port;
-  bool enabled;
-  uint8_t reserved;
-  std::string address;
-};
-
-class RouterSeletor {
-private:
-  std::vector<HostElement> hostElement_;
-  std::string defaultElement_;
-  uint16_t defaultPort_;
-
-public:
-  bool InitializeManager(const char *tableFile);
-  bool GetAddress(const std::string &owner, StorageElement &elem);
-};
 
 bool InitializeRouterSeletor(const std::string &file);
 bool GetStorageElement(const SubversionURL &su, StorageElement &elem);

@@ -1,0 +1,135 @@
+/*
+* TOMLParse.cc
+* oschina.net subversion proxy service
+* author: Force.Charlie
+* Date: 2016.02
+* Copyright (C) 2016. OSChina.NET. All Rights Reserved.
+*/
+#include "svnsrv.h"
+#include "cpptoml.h"
+#include "Runtime.hpp"
+
+#ifdef _WIN32
+
+class CharacterFlip {
+private:
+  char *str = nullptr;
+
+public:
+  CharacterFlip(char *u8) {
+    if (u8 == nullptr)
+      return;
+    // to wide char
+    int unicodeLen = ::MultiByteToWideChar(CP_UTF8, 0, u8, -1, NULL, 0);
+    if (unicodeLen == 0)
+      return;
+    wstr = new wchar_t[unicodeLen + 1];
+    if (wstr == nullptr)
+      return;
+    wstr[unicodeLen] = 0;
+    ::MultiByteToWideChar(CP_UTF8, 0, u8, -1, (LPWSTR)wstr, unicodeLen);
+
+    // to codepage
+    int iTextLen =
+        WideCharToMultiByte(CP_ACP, 0, wstr, -1, NULL, 0, NULL, NULL);
+    str = new char[iTextLen + 1];
+    if (str == nullptr) {
+      delete[] wstr;
+      return;
+    }
+    str[iTextLen] = 0;
+    WideCharToMultiByte(CP_ACP, 0, wstr, -1, str, iTextLen, NULL, NULL);
+    delete[] wstr;
+  }
+  ~CharacterFlip() {
+    if (str)
+      delete[] str;
+  }
+  const char *Get() {
+    if (str == nullptr)
+      return nullptr;
+    return const_cast<const char *>(str);
+  }
+};
+
+#endif
+
+bool ParseServiceProfile(const char *configfile, NetworkServerArgs &na,
+                         LauncherArgs &la) {
+  std::string tomlfile;
+  if (configfile == nullptr) {
+    if (!GetProcessImageFileFolder(tomlfile)) {
+      perror("Failure, svnsrv cannot found self exe path!\n");
+      return false;
+    }
+    tomlfile += "/svnsrv.toml";
+    if (!PathFileIsExists(tomlfile)) {
+      /// cannot found svnsrv.toml from default
+      if (PathFileIsExists("svnsrv.toml")) {
+        // current directory svnsrv.toml
+        tomlfile = "svnsrv.toml";
+      } else {
+        if (!PathCombineHomeExists(tomlfile, ".svnsrv/svnsrv.toml")) {
+          fprintf(stderr, "cannot found any profile in search directory !\n");
+          return false;
+        }
+      }
+    }
+  } else {
+    if (!PathFileIsExists(configfile)) {
+      fprintf(stderr, "svnsrv custom profile: %s,not exists\n", configfile);
+      return false;
+    }
+    tomlfile = configfile;
+  }
+  std::shared_ptr<cpptoml::table> g;
+  try {
+    g = cpptoml::parse_file(tomlfile);
+  } catch (const cpptoml::parse_exception &e) {
+    fprintf(stderr, "Failure, Parser svnsrv.toml failed: %s \n", e.what());
+    return false;
+  }
+  auto Strings = [&](const char *key, const char *v) -> std::string {
+    if (g->contains_qualified(key)) {
+      return g->get_qualified(key)->as<std::string>()->get();
+    }
+    return std::string(v);
+  };
+  auto Integer = [&](const char *key, int vi) -> int {
+    if (g->contains_qualified(key)) {
+      auto i64 = g->get_qualified(key)->as<int64_t>()->get();
+      return static_cast<int>(i64);
+    }
+    return vi;
+  };
+  auto Boolean = [&](const char *key, bool b) -> bool {
+    if (g->contains_qualified(key)) {
+      return g->get_qualified(key)->as<bool>()->get();
+    }
+    return b;
+  };
+  // Network Server Args
+  na.poolSize = Integer("Service.PoolSize", 64);
+  na.port = Integer("Network.Port", 3690);
+  na.compressionLevel = Integer("Network.Compression", 0);
+  na.connectTimeout = Integer("Network.Timeout", TIMEOUT_INFINITE);
+  // printf("ConnectTimeout: 0x%08X\n", na.connectTimeout);
+  na.address = Strings("Network.Address", "127.0.0.1");
+  na.domain = Strings("Network.Domain", "git.oschina.net");
+  na.isDomainFilter = Boolean("Network.DomainFilter", false);
+  na.isTunnel = Boolean("Network.Tunnel", false);
+  ///// Launcher Args
+  la.logAccess = Strings("Logger.Access", "/tmp/svnsrv.access.log");
+  la.logError = Strings("Logger.Error", "/tmp/svnsrv.error.log");
+  la.pidFile = Strings("Daemon.PidFile", "/tmp/svnsrv.pid");
+  la.allowRestart = Boolean("Daemon.AllowRestart", true);
+
+#ifdef _WIN32
+  auto tableFile = Strings("Router.RangeFile", "router.toml");
+  CharacterFlip cf(tableFile.c_str());
+  la.routerFile = cf.Get();
+#else
+  la.routerFile = Strings("Router.RangeFile", "router.toml");
+#endif
+  return true;
+}

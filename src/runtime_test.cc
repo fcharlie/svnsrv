@@ -7,8 +7,8 @@
 
 int main() {
   std::string dir;
-  if (GetMainExecuteFileDirectory(dir)) {
-    std::cout << "GetMainExecuteFileDirectory: " << dir << std::endl;
+  if (GetProcessImageFileFolder(dir)) {
+    std::cout << "GetProcessImageFileFolder: " << dir << std::endl;
   }
   return 0;
 }

@@ -10,15 +10,14 @@
 #include <cstdint>
 #include <cstdarg>
 #include <cstring>
-#include <sys/stat.h>
-#include "cpptoml.h"
+//#include <sys/stat.h>
 #include "klog.h"
 #include "version.h"
 #include "svnsrv.h"
 #include "Daemonize.h"
+#include "TOMLParse.hpp"
 #include "SubversionServer.hpp"
 #include "RouterSeletor.hpp"
-#include "Runtime.hpp"
 #include "Argv.hpp"
 
 enum ProcessSignalFlow {
@@ -69,85 +68,6 @@ int ProcessSignalArgs(const char *signame, const LauncherArgs &lanucherAgrs) {
   }
   printf("Unsupported signal: %s\n", signame);
   return kArgumentError;
-}
-
-bool ParseServiceProfile(const char *cfile, NetworkServerArgs &na,
-                         LauncherArgs &la) {
-  std::string tomlfile;
-  if (cfile == nullptr) {
-    if (!GetProcessImageFileFolder(tomlfile)) {
-      perror("Failure, svnsrv cannot found self exe path!\n");
-      return false;
-    }
-    tomlfile += "/svnsrv.toml";
-    if (!PathFileIsExists(tomlfile)) {
-      /// cannot found svnsrv.toml from default
-      if (PathFileIsExists("svnsrv.toml")) {
-        // current directory svnsrv.toml
-        tomlfile = "svnsrv.toml";
-      } else {
-        if (!PathCombineHomeExists(tomlfile, ".svnsrv/svnsrv.toml")) {
-          fprintf(stderr, "cannot found any profile in search directory !\n");
-          return false;
-        }
-      }
-    }
-  } else {
-    if (!PathFileIsExists(cfile)) {
-      fprintf(stderr, "svnsrv custom profile: %s,not exists\n", cfile);
-      return false;
-    }
-    tomlfile = cfile;
-  }
-  std::shared_ptr<cpptoml::table> g;
-  try {
-    g = cpptoml::parse_file(tomlfile);
-  } catch (const cpptoml::parse_exception &e) {
-    fprintf(stderr, "Failure, Parser svnsrv.toml failed: %s \n", e.what());
-    return false;
-  }
-  auto Strings = [&](const char *key, const char *v) -> std::string {
-    if (g->contains_qualified(key)) {
-      return g->get_qualified(key)->as<std::string>()->get();
-    }
-    return std::string(v);
-  };
-  auto Integer = [&](const char *key, int vi) -> int {
-    if (g->contains_qualified(key)) {
-      auto i64 = g->get_qualified(key)->as<int64_t>()->get();
-      return static_cast<int>(i64);
-    }
-    return vi;
-  };
-  auto Boolean = [&](const char *key, bool b) -> bool {
-    if (g->contains_qualified(key)) {
-      return g->get_qualified(key)->as<bool>()->get();
-    }
-    return b;
-  };
-  // Network Server Args
-  na.poolSize = Integer("Service.PoolSize", 64);
-  na.port = Integer("Network.Port", 3690);
-  na.compressionLevel = Integer("Network.Compression", 0);
-  na.connectTimeout = Integer("Network.Timeout", TIMEOUT_INFINITE);
-  // printf("ConnectTimeout: 0x%08X\n", na.connectTimeout);
-  na.address = Strings("Network.Address", "127.0.0.1");
-  na.domain = Strings("Network.Domain", "git.oschina.net");
-  na.isDomainFilter = Boolean("Network.DomainFilter", false);
-  na.isTunnel = Boolean("Network.Tunnel", false);
-  ///// Launcher Args
-  la.logAccess = Strings("Logger.Access", "/tmp/svnsrv.access.log");
-  la.logError = Strings("Logger.Error", "/tmp/svnsrv.error.log");
-  la.pidFile = Strings("Daemon.PidFile", "/tmp/svnsrv.pid");
-  la.allowRestart = Boolean("Daemon.AllowRestart", true);
-
-  auto tableFile = Strings("Router.RangeFile", "router.toml");
-
-  if (!InitializeRouterSeletor(tableFile)) {
-    // perror("Initialize router seletor failed !");
-    return false;
-  }
-  return true;
 }
 
 int main(int argc, char **argv) {
@@ -204,6 +124,10 @@ int main(int argc, char **argv) {
   if (!ParseServiceProfile(cfile, networkArgs, launcherArgs)) {
     perror("svnsrv parse svnsrv.toml failed !\n");
     return -1;
+  }
+  if (!InitializeRouterSeletor(launcherArgs.routerFile)) {
+    perror("svnsrv cannot initialized RouterSeletor !");
+    return -2;
   }
   klogger::InitializeKlogger(launcherArgs.logAccess.c_str(),
                              launcherArgs.logError.c_str());

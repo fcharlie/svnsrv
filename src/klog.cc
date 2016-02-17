@@ -9,8 +9,28 @@
 #include <ctime>
 #include <cstdarg>
 #include <chrono>
-#include <unistd.h>
 #include "klog.h"
+
+#ifdef _WIN32
+// windows
+#include <windows.h>
+#ifdef __MSC_VER
+#include <sdkddkver.h>
+#if defined(_WIN32_WINNT_WIN8) && defined(_WIN32_WINNT) &&                     \
+    _WIN32_WINNT >= _WIN32_WINNT_WIN8
+#include <Processthreadsapi.h>
+#endif
+#endif
+///
+#else
+// posix
+#include <unistd.h>
+#include <pthread.h>
+#define GetCurrentProcessId getpid
+#define GetCurrentThreadId pthread_self
+
+#endif
+
 using namespace klogger;
 
 static const char *wday[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
@@ -81,8 +101,8 @@ void Klogger::fflushE() {
 
 void Klogger::destroy(const char *msg) {
   char buffer[4096];
-  auto id = getpid();
-  auto tid = pthread_self();
+  auto id = GetCurrentProcessId();
+  auto tid = GetCurrentThreadId();
   auto t =
       std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   auto tm = std::localtime(&t);
@@ -123,8 +143,8 @@ void Klogger::access(const char *fmt, ...) {
 
 void Klogger::log(KloggerLevel level, const char *fmt, ...) {
   char buffer[4096];
-  size_t tid = pthread_self();
-  auto id = getpid();
+  size_t tid = GetCurrentThreadId();
+  auto id = GetCurrentProcessId();
   auto t =
       std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   auto tm = std::localtime(&t);

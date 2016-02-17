@@ -1,17 +1,7 @@
-/*
-* Argv.hpp
-* Argv Copy and Parse
-* author: Force.Charlie
-* Date: 2016.01
-* Copyright (C) 2016. OSChina.NET. All Rights Reserved.
-*/
-#ifndef MIRACLE_ARGV_HPP
-#define MIRACLE_ARGV_HPP
-#include <vector>
-#include <cstdlib>
-#include <cstring>
+#pragma once
 
-//////// getopt replace
+//#include "lldb/lldb-defines.h"
+
 #if defined(_MSC_VER)
 #define REPLACE_GETOPT
 #define REPLACE_GETOPT_LONG
@@ -59,32 +49,4 @@ int getopt_long(int argc, char *const *argv, const char *optstring,
 #if defined(REPLACE_GETOPT_LONG_ONLY)
 int getopt_long_only(int argc, char *const *argv, const char *optstring,
                      const struct option *longopts, int *longindex);
-#endif
-
-/*
-* SavedArgv RAII based Argv class
-* when some one change process title, argv has been changed
-* but app require parse argv
-*/
-class SavedArgv {
-private:
-  std::vector<char *> Argvs;
-
-public:
-  SavedArgv &operator=(const SavedArgv &) = delete;
-  SavedArgv(SavedArgv &) = delete;
-  SavedArgv(int argc, char **argv) {
-    for (int i = 0; i < argc; i++) {
-      Argvs.push_back(strdup(argv[i]));
-    }
-  }
-  ~SavedArgv() {
-    for (auto &a : Argvs) {
-      std::free(a);
-    }
-  }
-  char **Argv() const { return const_cast<decltype(Argv())>(Argvs.data()); }
-  int Argc() const { return Argvs.size(); }
-};
-
 #endif

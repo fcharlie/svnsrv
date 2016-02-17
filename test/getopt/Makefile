@@ -19,27 +19,21 @@ endif
 CFLAGS= -g -Wunused-variable -Wimplicit-function-declaration
 
 
-ADDLIB=  -lboost_system -lboost_thread  -lpthread
 
-PROJECTNAME=svnsrv
+PROJECTNAME=getopt
 
-OBJECTS=main.o Argv.o Runtime.o Daemonize.o SubversionServer.o SubversionSession.o SubversionHds.o RouterSeletor.o klog.o
+OBJECTS=getopt.o GetOptInc.o
 
 
 all:$(PROJECTNAME)
 
 
 $(PROJECTNAME): $(OBJECTS)
-	$(CXX) $(ADDRESSLINK) $(OBJECTS)  $(ADDLIB) -o $@
+	$(CXX) $(ADDRESSLINK) $(OBJECTS)  -o $@
 
-$(OBJECTS):%.o:%.cc
+$(OBJECTS):%.o:%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-install:$(PROJECTNAME) ../config/svnsrv.toml ../config/router.toml
-	cp $(PROJECTNAME) ../bin
-	cp ../config/svnsrv.toml ../bin
-	cp  ../config/router.toml ../bin
 
 
 clean:
-	rm *.o svnsrv
+	rm *.o $(PROJECTNAME)

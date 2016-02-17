@@ -18,6 +18,7 @@
 #include "Daemonize.h"
 #include "SubversionServer.hpp"
 #include "RouterSeletor.hpp"
+#include "Runtime.hpp"
 #include "Argv.hpp"
 
 enum ProcessSignalFlow {
@@ -44,24 +45,6 @@ static const char *kVersion =
     "svnsrv is authored by Force Charlie <forcemz@forcemz.net>.\n"
     "Copyright (C) 2016 OSChina.NET .All Rights Reserved.\n"
     "This software Licensed under the MTI License.\n";
-
-bool GetProcessImageFileFolder(char *buffer, size_t bufSize) {
-  auto sz = readlink("/proc/self/exe", buffer, bufSize - 1);
-  if (sz == 0)
-    return false;
-  buffer[sz] = 0;
-  while (--sz) {
-    if (buffer[sz] == '/') {
-      if (sz == 0)
-        buffer[1] = 0;
-      else
-        buffer[sz] = 0;
-      return true;
-    }
-  }
-  buffer[1] = 0;
-  return true;
-}
 
 int PrintVersion(bool quiet) {
   if (quiet) {
@@ -91,25 +74,26 @@ int ProcessSignalArgs(const char *signame, const LauncherArgs &lanucherAgrs) {
 bool ParseServiceProfile(const char *cfile, NetworkServerArgs &na,
                          LauncherArgs &la) {
   std::string tomlfile;
-  char buffer[4096];
   if (cfile == nullptr) {
-    if (GetProcessImageFileFolder(buffer, 4096) == false) {
+    if (!GetProcessImageFileFolder(tomlfile)) {
       perror("Failure, svnsrv cannot found self exe path!\n");
       return false;
     }
-    tomlfile = std::string(buffer) + "/svnsrv.toml";
-    if (access(tomlfile.c_str(), F_OK) != 0) {
-      fprintf(stderr, "svnsrv private profile: %s,not exists\n",
-              tomlfile.c_str());
-      tomlfile = std::string(getenv("HOME")) + "/.svnsrv/svnsrv.toml";
-      if (access(tomlfile.c_str(), R_OK) != 0) {
-        fprintf(stderr, "svnsrv local profile: %s,not exists\n",
-                tomlfile.c_str());
-        return false;
+    tomlfile += "/svnsrv.toml";
+    if (!PathFileIsExists(tomlfile)) {
+      /// cannot found svnsrv.toml from default
+      if (PathFileIsExists("svnsrv.toml")) {
+        // current directory svnsrv.toml
+        tomlfile = "svnsrv.toml";
+      } else {
+        if (!PathCombineHomeExists(tomlfile, ".svnsrv/svnsrv.toml")) {
+          fprintf(stderr, "cannot found any profile in search directory !\n");
+          return false;
+        }
       }
     }
   } else {
-    if (access(cfile, R_OK) != 0) {
+    if (!PathFileIsExists(cfile)) {
       fprintf(stderr, "svnsrv custom profile: %s,not exists\n", cfile);
       return false;
     }

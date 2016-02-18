@@ -108,27 +108,51 @@ bool ParseServiceProfile(const char *configfile, NetworkServerArgs &na,
     }
     return b;
   };
-  // Network Server Args
+  /*
+  *
+  * TOML is case sensitive.
+  * A TOML file must contain only UTF-8 encoded Unicode characters.
+  * Whitespace means tab (0x09) or space (0x20).
+  * Newline means LF (0x0A) or CRLF (0x0D0A).
+  *-------------------------------------------------
+  *
+  * UTF8: https://en.wikipedia.org/wiki/UTF-8
+  * UTF-8 uses the codes 0–127 only for the ASCII characters
+  * ip address is complete, domain not support other encoding
+  */
   na.poolSize = Integer("Service.PoolSize", 64);
   na.port = Integer("Network.Port", 3690);
   na.compressionLevel = Integer("Network.Compression", 0);
   na.connectTimeout = Integer("Network.Timeout", TIMEOUT_INFINITE);
-  // printf("ConnectTimeout: 0x%08X\n", na.connectTimeout);
   na.address = Strings("Network.Address", "127.0.0.1");
   na.domain = Strings("Network.Domain", "git.oschina.net");
   na.isDomainFilter = Boolean("Network.DomainFilter", false);
   na.isTunnel = Boolean("Network.Tunnel", false);
-  ///// Launcher Args
+
+#ifdef _WIN32
+  //
+  auto tableFile = Strings("Router.RangeFile", "router.toml");
+  CharacterFlip charTablefile(tableFile.c_str());
+  la.routerFile = charTablefile.Get();
+
+  auto accessLogFile = Strings("Logger.Access", "svnsrv.access.log");
+  CharacterFlip charAccessFile(accessLogFile.c_str());
+  la.logAccess = charAccessFile.Get();
+
+  auto errorLogFile = Strings("Logger.Error", "svnsrv.error.log");
+  CharacterFlip charErrorFile(errorLogFile.c_str());
+  la.logError = charErrorFile.Get();
+
+  auto pidFile = Strings("Daemon.PidFile", "svnsrv.pid");
+  CharacterFlip charPidFile(pidFile.c_str());
+  la.pidFile = charPidFile.Get();
+
+  la.crashRestart = Boolean("Daemon.CrashRestart", false);
+#else
   la.logAccess = Strings("Logger.Access", "/tmp/svnsrv.access.log");
   la.logError = Strings("Logger.Error", "/tmp/svnsrv.error.log");
   la.pidFile = Strings("Daemon.PidFile", "/tmp/svnsrv.pid");
   la.crashRestart = Boolean("Daemon.CrashRestart", true);
-
-#ifdef _WIN32
-  auto tableFile = Strings("Router.RangeFile", "router.toml");
-  CharacterFlip cf(tableFile.c_str());
-  la.routerFile = cf.Get();
-#else
   la.routerFile = Strings("Router.RangeFile", "router.toml");
 #endif
   return true;

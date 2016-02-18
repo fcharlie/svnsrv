@@ -243,6 +243,52 @@ bool DaemonStop(const std::string &pidFile) {
   _unlink(pidFile.c_str());
   return true;
 }
+// PathFindFileNameW
+static bool FindSelfExecuteFileName(LPWSTR cmdline, size_t len) {
+  WCHAR lpszPath[MAX_PATH] = 0;
+  if (!GetModuleFileName(NULL, lpszPath, MAX_PATH))
+    return false;
+  auto p = lpszPath;
+  for (; *p; p++) {
+    if (*p == ' ') {
+      wcsncpy(cmdline, L"\"", len);
+      wcsncat(cmdline, lpszPath, len);
+      wcsncat(cmdline, L"\"", len);
+      return true;
+    }
+  }
+  wcsncpy(cmdline, lpszPath, len);
+  return true;
+}
+// PathRemoveArgs remove args
+// PathGetArgsW
+static LPWSTR WINAPI InternalPathGetArgsW(LPCWSTR lpszPath) {
+  BOOL bSeenQuote = FALSE;
+  if (lpszPath) {
+    while (*lpszPath) {
+      if ((*lpszPath == ' ') && !bSeenQuote)
+        return (LPWSTR)lpszPath + 1;
+      if (*lpszPath == '"')
+        bSeenQuote = !bSeenQuote;
+      lpszPath++;
+    }
+  }
+  return (LPWSTR)lpszPath;
+}
+
+static bool build_cmdline(LPWSTR cmdline, size_t bufferLength,
+                          const std::wstring &oldcmd) {
+  if (oldcmd.empty())
+    return false;
+  if (!FindSelfExecuteFileName(cmdline, bufferLength))
+    return false;
+  auto args = InternalPathGetArgsW(oldcmd.c_str());
+  if (args) {
+    wcsncat(cmdline, L" ", bufferLength);
+    wcsncat(cmdline, args, bufferLength);
+  }
+  return true;
+}
 
 bool DaemonRestart(const std::string &pidFile) {
   std::wstring cmdline;
@@ -261,11 +307,28 @@ bool DaemonRestart(const std::string &pidFile) {
     CloseHandle(hProcess);
     return false;
   }
-  if (TerminateProcess(hProcess, 0) == 0) {
+  if (TerminateProcess(hProcess, 0) == FALSE) {
     perror("terminate svnsrv failed !\n");
   }
   CloseHandle(hProcess);
   _unlink(pidFile.c_str());
-  // printf("stop svnsrv daemon success !\n");
-  return 0;
+  WCHAR cmdlineBuffer[32767] = {0};
+  if (!build_cmdline(cmdlineBuffer, 32767, cmdline)) {
+    /// build cmdline failed
+    return false;
+  }
+  PROCESS_INFORMATION pi;
+  STARTUPINFO si;
+  ZeroMemory(&si, sizeof(si));
+  si.cb = sizeof(si);
+  si.dwFlags = STARTF_USESHOWWINDOW;
+  si.wShowWindow = SW_SHOWDEFAULT;
+  BOOL result = CreateProcessW(NULL, cmdlineBuffer, NULL, NULL, TRUE,
+                               CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi);
+  if (result) {
+    printf("restart svnsrv success !");
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+  }
+  return false;
 }

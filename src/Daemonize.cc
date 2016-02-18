@@ -19,6 +19,7 @@
 #elif defined(__linux__)
 #include "daemonize_linux.inl"
 #elif defined(__FreeBSD__)
+#include "daemonize_bsd.inl"
 #else
-#error ""
+#error "Not implemented on this platform compatibility"
 #endif

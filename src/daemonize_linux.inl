@@ -1,5 +1,5 @@
 /*
-* daemonize_unix.inl
+* daemonize_linux.inl
 * oschina.net subversion proxy service
 * author: Force.Charlie
 * Date: 2016.02

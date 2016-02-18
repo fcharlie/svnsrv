@@ -14,8 +14,11 @@
 #include <vector>
 #include "klog.h"
 #include "Daemonize.h"
-#ifdef _WIN32
+#if defined(_WIN32)
 #include "daemonize_win.inl"
+#elif defined(__linux__)
+#include "daemonize_linux.inl"
+#elif defined(__FreeBSD__)
 #else
-#include "daemonize_unix.inl"
+#error ""
 #endif

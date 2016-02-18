@@ -16,6 +16,8 @@
 #endif
 
 #include <string>
+#include <io.h>
+#include <stdio.h>
 #ifdef _MSC_VER
 #include <Winternl.h>
 #define WIN32_LEAN_AND_MEAN
@@ -206,17 +208,13 @@ bool DaemonWait(int Argc, char **Argv, bool crashRestart) {
 }
 
 void WhenExit() {
-  //
+  klogger::Destroy("svnsrv shutdown");
+  //_exit(0);
 }
 
 int DaemonSignalMethod() {
   atexit(WhenExit);
   return 0;
-}
-////////////////
-void ForegroundShutdown(int sig) {
-  klogger::Destroy("svnsrv shutdown");
-  _exit(0);
 }
 
 int ForegroundSignalMethod() {
@@ -242,6 +240,7 @@ bool DaemonStop(const std::string &pidFile) {
   }
   printf("stop svnsrv daemon success !\n");
   CloseHandle(hProcess);
+  _unlink(pidFile.c_str());
   return true;
 }
 
@@ -266,6 +265,7 @@ bool DaemonRestart(const std::string &pidFile) {
     perror("terminate svnsrv failed !\n");
   }
   CloseHandle(hProcess);
+  _unlink(pidFile.c_str());
   // printf("stop svnsrv daemon success !\n");
   return 0;
 }

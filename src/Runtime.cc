@@ -44,6 +44,36 @@ public:
     return const_cast<const char *>(raw_);
   }
 };
+
+class CharacterW {
+private:
+  wchar_t *wstr = nullptr;
+
+public:
+  CharacterW(const char *str) {
+    if (str == nullptr)
+      return;
+    // to wide char
+    int unicodeLen = ::MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
+    if (unicodeLen == 0)
+      return;
+    wstr = new wchar_t[unicodeLen + 1];
+    if (wstr == nullptr)
+      return;
+    wstr[unicodeLen] = 0;
+    ::MultiByteToWideChar(CP_ACP, 0, str, -1, (LPWSTR)wstr, unicodeLen);
+  }
+  ~CharacterW() {
+    if (wstr)
+      delete[] wstr;
+  }
+  const wchar_t *Get() {
+    if (wstr == nullptr)
+      return nullptr;
+    return const_cast<const wchar_t *>(wstr);
+  }
+};
+
 //
 bool GetProcessImageFileFolder(std::string &dir) {
   ///
@@ -62,7 +92,8 @@ bool GetProcessImageFileFolder(std::string &dir) {
 bool PathFileIsExists(const std::string &path) {
   if (path.empty())
     return false;
-  return PathFileExistsA(path.c_str())==TRUE;
+  CharacterW wc(path.c_str());
+  return GetFileAttributesW(wc.Get()) != INVALID_FILE_ATTRIBUTES;
 }
 
 // SHGetKnownFolderPath:

@@ -31,7 +31,7 @@ public:
   void stop();
 
 private:
-  void sendError(int errorcode, const char *message, size_t length);
+  void sendError(int errorcode, const char *message, uint32_t length);
   void echo_downstream_handshake(const boost::system::error_code &e,
                                  std::size_t bytes_transferred);
   void read_downstream_handshake(const boost::system::error_code &e,

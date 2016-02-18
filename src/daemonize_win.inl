@@ -357,7 +357,7 @@ bool DaemonRestart(const std::string &pidFile) {
   BOOL result = CreateProcessW(NULL, cmdlineBuffer, NULL, NULL, TRUE,
                                CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi);
   if (result) {
-    printf("restart svnsrv success !");
+    printf("restart svnsrv success !\n");
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
   }

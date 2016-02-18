@@ -18,6 +18,7 @@
 #include <string>
 #include <io.h>
 #include <stdio.h>
+#define __STDC_FORMAT_MACROS  
 #include <inttypes.h>
 
 #ifdef _MSC_VER
@@ -153,12 +154,12 @@ BOOL GetProcessCommandline(DWORD pid, std::wstring &cmdline) {
 }
 #endif
 ///
-static DWORD check_pid(const char *pidfile) {
-  int pid = 0;
+static uint32_t check_pid(const char *pidfile) {
+  uint32_t pid = 0;
   FILE *fp = fopen(pidfile, "r");
   if (fp == nullptr)
     return 0;
-  int n = fscanf(fp, "%" PRIu32 "", &pid);
+  int n = fscanf(fp, "%" PRIu32, &pid);
   fclose(fp);
   if (n != 1 || pid == 0 || pid == GetCurrentProcessId()) {
     return 0;
@@ -178,7 +179,8 @@ static bool write_pid(const char *pidfile) {
     klogger::Log(klogger::kFatal, "cannot open %s", pidfile);
     return false;
   }
-  fprintf(fp, "%d", GetCurrentProcessId());
+  uint32_t pid = GetCurrentProcessId();
+  fprintf(fp, "%" PRIu32,pid);
   fclose(fp);
   return true;
 }

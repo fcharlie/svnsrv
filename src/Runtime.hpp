@@ -11,19 +11,20 @@
 #ifdef _WIN32
 // windows
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#ifdef _MSC_VER
 #include <sdkddkver.h>
-#if defined(_WIN32_WINNT_WIN8) && defined(_WIN32_WINNT) &&                     \
-    _WIN32_WINNT >= _WIN32_WINNT_WIN8
+#ifdef _WIN32_WINNT
+#undef _WIN32_WINNT
+#endif
+
+/// NOTICE Mingw64 aslo have Processthreadsapi.h
+#define _WIN32_WINNT _WIN32_WINNT_WINBLUE
+#include <windows.h>
 #include <Processthreadsapi.h>
-#if _MSC_VER<=1800
+
+#if defined(_MSC_VER) &&_MSC_VER<=1800
 #define snprintf _snprintf
 #endif
 
-#endif
-#endif
-///
 #else
 // posix
 #include <unistd.h>

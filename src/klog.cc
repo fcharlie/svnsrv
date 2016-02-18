@@ -11,6 +11,7 @@
 #include <chrono>
 #include "klog.h"
 #include "Runtime.hpp"
+#define __STDC_FORMAT_MACROS  
 #include <inttypes.h>
 
 using namespace klogger;
@@ -75,7 +76,7 @@ void Klogger::destroy(const char *msg) {
   auto len =
 	  snprintf(buffer, 4096, "[Info] Process: %d Thread: %" PRIu64 " Time: "
                              "%d/%02d/%02d %s %02d:%02d:%02d %s\n",
-               id, tid, (1900 + tm->tm_year), tm->tm_mon + 1, tm->tm_mday,
+               (int)id, tid, (1900 + tm->tm_year), tm->tm_mon + 1, tm->tm_mday,
                wday[tm->tm_wday], tm->tm_hour, tm->tm_min, tm->tm_sec, msg);
   if (logError) {
     fwrite(buffer, 1, len, logError);
@@ -117,7 +118,7 @@ void Klogger::log(KloggerLevel level, const char *fmt, ...) {
   auto len = snprintf(
       buffer, 4095,
 	  "[%s] Process: %d Thread: %" PRIu64 " Time: %d/%02d/%02d %s %02d:%02d:%02d ",
-      leveMessage[level], id, tid, (1900 + tm->tm_year), tm->tm_mon + 1,
+      leveMessage[level], (int)id, tid, (1900 + tm->tm_year), tm->tm_mon + 1,
       tm->tm_mday, wday[tm->tm_wday], tm->tm_hour, tm->tm_min, tm->tm_sec);
   char *p = buffer + len;
   size_t l = 4095 - len;

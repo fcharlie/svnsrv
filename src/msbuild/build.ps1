@@ -16,7 +16,7 @@ $msbuildLocation = [System.IO.Path]::Combine($msbuildLocation, "MSBuild", "14.0"
 
 if(Test-Path $msbuildLocation){
     $Env:Path += ";" + $msbuildLocation
-}elif(Test-Path $msbuild120Location){
+}elseif(Test-Path $msbuild120Location){
     $Env:Path += ";" + $msbuild120Location
 }else{
     Write-Output "cannot find support msbuild !"

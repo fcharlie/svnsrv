@@ -16,6 +16,7 @@
 #include "SubversionHds.hpp"
 #include "SubversionSession.hpp"
 #include "klog.h"
+#define __STDC_FORMAT_MACROS  
 #include <inttypes.h>
 
 #if defined(_MSC_VER)&&_MSC_VER<=1800

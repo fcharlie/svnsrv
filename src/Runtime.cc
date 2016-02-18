@@ -104,13 +104,19 @@ bool PathFileIsExists(const std::string &path) {
 bool PathCombineHomeExists(std::string path, const char *relativePath) {
   if (relativePath == nullptr)
     return false;
+#ifdef _MSC_VER
   wchar_t *pszBuffer = nullptr;
+  //USERPROFILE
   if (SHGetKnownFolderPath(FOLDERID_Profile, 0, NULL, &pszBuffer) != S_OK) {
     perror("SHGetKnownFolderPath cannot resolve user home !");
     return false;
   }
   CharacterA ca(pszBuffer);
   path = ca.Get();
+  CoTaskMemFree(pszBuffer);
+#else
+  path=getenv("USERPROFILE");
+#endif
   if (path.back() != '\\') {
     path.push_back('\\');
   }

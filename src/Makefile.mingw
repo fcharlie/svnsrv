@@ -1,0 +1,47 @@
+#Makefile  for svnsrv
+#MSYS2 pacman -Ss mingw64, boost library
+# make -f Makefile.mingw
+
+CC?=gcc
+CXX?=g++
+RC=windres
+
+BUILDTYPE?=Debug
+
+ifeq ($(CXX),clang++)
+CXXFLAGS= -std=c++11 -g -Wall  -Wunused-variable -pedantic -Weffc++ -Wno-gnu-anonymous-struct \
+-Wno-unused-local-typedef -Wno-c99-extensions 
+else
+CXXFLAGS= -std=c++11 -g -Wall  -Wunused-variable 
+endif
+CFLAGS= -g -Wunused-variable -Wimplicit-function-declaration
+
+
+ADDLIB=-lshell32 -lshlwapi -lboost_system-mt -lboost_thread-mt -lwsock32 -lws2_32 -lpthread
+
+PROJECTNAME=svnsrv
+
+OBJECTS=main.o Argv.o Runtime.o TOMLParse.o Daemonize.o SubversionServer.o SubversionSession.o SubversionHds.o \
+RouterSeletor.o klog.o
+
+
+all:$(PROJECTNAME)
+
+
+$(PROJECTNAME): $(OBJECTS) svnsrv.res
+	$(CXX) $(ADDRESSLINK) $(OBJECTS) svnsrv.res $(ADDLIB) -o $@
+
+svnsrv.res:msbuild/svnsrv.rc
+	$(RC) -c 65001 $< -O coff -o $@
+	
+$(OBJECTS):%.o:%.cc
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+install:$(PROJECTNAME) ../config/svnsrv.toml ../config/router.toml
+	cp $(PROJECTNAME) ../bin
+	cp ../config/svnsrv.toml ../bin
+	cp  ../config/router.toml ../bin
+
+
+clean:
+	rm *res *.o *.exe

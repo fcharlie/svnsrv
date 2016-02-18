@@ -9,7 +9,7 @@ Author="Force.Charlie"
 PoolSize=32
 
 [Daemon]
-AllowRestart=true
+CrashRestart=true
 PidFile="/tmp/svnsrv.pid"
 
 [Logger]

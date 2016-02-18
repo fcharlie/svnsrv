@@ -36,7 +36,7 @@ typedef struct LauncherArgs__ {
   std::string logAccess;
   std::string logError;
   std::string routerFile;
-  bool allowRestart;
+  bool crashRestart;
   uint8_t reserved[3];
 } LauncherArgs;
 

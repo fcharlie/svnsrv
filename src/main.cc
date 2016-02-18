@@ -145,9 +145,9 @@ int main(int argc, char **argv) {
       return -1;
     }
     klogger::Log(klogger::kInfo, "svnsrv run as daemon success,pid: %d",
-				 GetCurrentProcessId());
+                 GetCurrentProcessId());
     klogger::FileFlush();
-    if (!DaemonWait(argc, argv, launcherArgs.allowRestart)) {
+    if (!DaemonWait(argc, argv, launcherArgs.crashRestart)) {
       klogger::Log(klogger::kError, "cannot create watcher process!");
       return -1;
     }

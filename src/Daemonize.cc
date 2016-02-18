@@ -308,8 +308,8 @@ bool DaemonRestart(const std::string &pidFile) {
 * child_pid , and fork new process.
 * change worker process title
 */
-bool DaemonWait(int Argc, char **Argv, bool allowRestart) {
-  if (!allowRestart) {
+bool DaemonWait(int Argc, char **Argv, bool crashRestart) {
+  if (!crashRestart) {
     prctl(PR_SET_NAME, "svnsrv: single", NULL, NULL, NULL);
     child_pid = -1;
     return true;

@@ -122,7 +122,7 @@ bool ParseServiceProfile(const char *configfile, NetworkServerArgs &na,
   la.logAccess = Strings("Logger.Access", "/tmp/svnsrv.access.log");
   la.logError = Strings("Logger.Error", "/tmp/svnsrv.error.log");
   la.pidFile = Strings("Daemon.PidFile", "/tmp/svnsrv.pid");
-  la.allowRestart = Boolean("Daemon.AllowRestart", true);
+  la.crashRestart = Boolean("Daemon.CrashRestart", true);
 
 #ifdef _WIN32
   auto tableFile = Strings("Router.RangeFile", "router.toml");

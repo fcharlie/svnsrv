@@ -18,7 +18,8 @@
 #include "daemonize_win.inl"
 #elif defined(__linux__)
 #include "daemonize_linux.inl"
-#elif defined(__FreeBSD__)
+#elif defined(__FreeBSD__) || defined(__APPLE__) || defined(__NetBSD__) ||     \
+    defined(__DragonFly__)
 #include "daemonize_bsd.inl"
 #else
 #error "Not implemented on this platform compatibility"

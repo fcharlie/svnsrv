@@ -10,7 +10,6 @@
 #include <cstdint>
 #include <cstdarg>
 #include <cstring>
-//#include <sys/stat.h>
 #include "klog.h"
 #include "version.h"
 #include "svnsrv.h"

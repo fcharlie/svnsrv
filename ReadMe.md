@@ -3,15 +3,21 @@ svnsrv 是 Subversion Protocol Dynamic Proxy Server (基于 svn 协议的动态�
 得到资源目标的机器，即时与资源服务器建立连接，实现客户端与资源服务器的数据交换。
 
 ##构建
-svnsrv 运行在 linux 上， 依赖 Boost ，使用 C++ 11 编译器，所以你必须要安装 GCC 4.8 或者是 clang 3.6 更高的版本。  
+svnsrv 运行在 linux 或者 Windows 上， 依赖 Boost ，使用 C++ 11 编译器。  
+在 linux 上，你必须要安装 GCC 4.8 或者是 clang 3.6 更高的版本，在 Windows 上，需要 Visual Studio 2013 或者更高版本。   
 
-在 Ubuntu 上安装依赖：    
+###Ubuntu 15.10     
+安装依赖      
 ```sh
 sudo apt-get install libboost-dev libboost-system-dev libboost-thread-dev
 ```
-
-构建非常简单：
+编译    
 >cd src && make
+
+###Windows 7 以上版本
+如果安装有 Visual Studio 2013 或者 2015 (建议社区版) 进入 src/msbuild ，双击 svnsrv.sln ，选择菜单 运行即可。
+
+也可以在 powershell 中运行 build.ps1
 
 ##设置路由
 Gitlab 类似的代码托管系统使用的是 Magic Path 划分用户，也就是使用用户用户名的前2个 ANSII 字符。我们可以将用户名转化为 16 bit 长的数字从而转变为区间。           

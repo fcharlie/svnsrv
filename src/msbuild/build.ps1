@@ -11,8 +11,18 @@ else
     $msbuildLocation = (Get-ChildItem "Env:ProgramFiles").Value
 }
 
+$msbuild120Location=[System.IO.Path]::Combine($msbuildLocation,"MSBuild","12.0","Bin")
 $msbuildLocation = [System.IO.Path]::Combine($msbuildLocation, "MSBuild", "14.0", "Bin")
-$Env:Path += ";" + $msbuildLocation
+
+if(Test-Path $msbuildLocation){
+    $Env:Path += ";" + $msbuildLocation
+}elif(Test-Path $msbuild120Location){
+    $Env:Path += ";" + $msbuild120Location
+}else{
+    Write-Output "cannot find support msbuild !"
+}
+
+
 
 $Env:VisualStudioVersion = "14.0"
 $Env:DevToolsVersion = "140"

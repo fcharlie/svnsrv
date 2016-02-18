@@ -7,7 +7,8 @@
 svnsrv 基于 C++ 开发，大部分编码使用了 C++11 标准支持的特性，如基于范围的循环，自动推到，智能指针等，
 
 
-##移植
+##兼容性
+svnsrv 支持在 linux 和 windows 中运行，由于 Daemonize 并没有实现 BSD like 系统的功能，构建是能够成功，但是使用 -s restart -s stop,以及 daemon 会失败。
 
 
 ##VM

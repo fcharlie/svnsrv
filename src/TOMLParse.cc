@@ -117,7 +117,7 @@ bool ParseServiceProfile(const char *configfile, NetworkServerArgs &na,
   *-------------------------------------------------
   *
   * UTF8: https://en.wikipedia.org/wiki/UTF-8
-  * UTF-8 uses the codes 0–127 only for the ASCII characters
+  * UTF-8 uses the codes 0-127 only for the ASCII characters
   * ip address is complete, domain not support other encoding
   */
   na.poolSize = Integer("Service.PoolSize", 64);

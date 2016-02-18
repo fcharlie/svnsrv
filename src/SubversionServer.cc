@@ -15,6 +15,7 @@
 #include <stdexcept>
 #include <boost/thread.hpp>
 #include "svnsrv.h"
+#include "Runtime.hpp"
 #include "SubversionServer.hpp"
 #include "SubversionSession.hpp"
 #include "klog.h"

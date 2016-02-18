@@ -21,12 +21,12 @@ BEGIN
         BLOCK "000904b0"
         BEGIN
             VALUE "CompanyName", L"OSChina.NET"
-            VALUE "FileDescription", L"Subversion Protocol Dynamic Proxy Server"
+            VALUE "FileDescription", L"Subversion Dynamic Proxy Server"
             VALUE "FileVersion", CONFIG_VERSION
             VALUE "InternalName", L"svnsrv.exe"
             VALUE "LegalCopyright", LAUNCHER_COPYRIGHT
             VALUE "OriginalFilename", L"svnsrv.exe"
-            VALUE "ProductName", L"Subversion Protocol Dynamic Proxy Server"
+            VALUE "ProductName", L"Subversion Dynamic Proxy Server"
             VALUE "ProductVersion", CONFIG_VERSION
         END
     END

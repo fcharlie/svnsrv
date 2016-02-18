@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Argv.cc" />
+    <ClCompile Include="..\Daemonize.cc" />
     <ClCompile Include="..\klog.cc" />
     <ClCompile Include="..\main.cc" />
     <ClCompile Include="..\RouterSeletor.cc" />

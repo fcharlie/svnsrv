@@ -18,6 +18,8 @@
 #include <string>
 #include <io.h>
 #include <stdio.h>
+#include <inttypes.h>
+
 #ifdef _MSC_VER
 #include <Winternl.h>
 #define WIN32_LEAN_AND_MEAN
@@ -26,6 +28,7 @@
 #if defined(_WIN32_WINNT_WIN8) && defined(_WIN32_WINNT) &&                     \
     _WIN32_WINNT >= _WIN32_WINNT_WIN8
 #include <Processthreadsapi.h>
+#endif
 #include <comutil.h>
 #include <wbemidl.h>
 #pragma comment(lib, "wbemuuid.lib")
@@ -192,11 +195,16 @@ int Daemonize(const std::string &pidfile) {
   if (!freopen("nul", "w+b", stdout)) {
     return -1;
   }
+  if (!freopen("nul", "w+b", stderr)) {
+	  return -1;
+  }
   if (!freopen("nul", "r+b", stdin)) {
     return -1;
   }
-  FreeConsole();
-  if (write_pid(pidfile)) {
+  if (FreeConsole() == FALSE) {
+	  return -1;
+  }
+  if (write_pid(pidfile.c_str())) {
     return 0;
   }
   return -2;
@@ -204,7 +212,7 @@ int Daemonize(const std::string &pidfile) {
 
 bool DaemonWait(int Argc, char **Argv, bool crashRestart) {
   (void)crashRestart;
-  return 0;
+  return true;
 }
 
 void WhenExit() {
@@ -245,7 +253,7 @@ bool DaemonStop(const std::string &pidFile) {
 }
 // PathFindFileNameW
 static bool FindSelfExecuteFileName(LPWSTR cmdline, size_t len) {
-  WCHAR lpszPath[MAX_PATH] = 0;
+	WCHAR lpszPath[MAX_PATH] = {0};
   if (!GetModuleFileName(NULL, lpszPath, MAX_PATH))
     return false;
   auto p = lpszPath;

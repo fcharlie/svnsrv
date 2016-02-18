@@ -75,6 +75,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\lib\native\src\boost_thread.tss_null.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Daemonize.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Argv.hpp">

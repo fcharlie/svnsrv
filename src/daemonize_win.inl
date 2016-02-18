@@ -190,6 +190,29 @@ int Daemonize(const std::string &pidfile) {
             pid);
     return 1;
   }
+  STARTUPINFOW startInfo;
+  GetStartupInfoW(&startInfo);
+  if (startInfo.wShowWindow!=SW_HIDE) {
+	  WCHAR cmd[32767] = { 0 };
+	  wcsncpy(cmd,GetCommandLineW(),32767);
+	  PROCESS_INFORMATION pi;
+	  STARTUPINFO si;
+	  ZeroMemory(&si, sizeof(si));
+	  si.cb = sizeof(si);
+	  si.dwFlags = STARTF_USESHOWWINDOW;
+	  si.wShowWindow = SW_HIDE;
+	  BOOL result = CreateProcessW(NULL, cmd, NULL, NULL, TRUE,
+								   CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi);
+	  if (result) {
+		  CloseHandle(pi.hThread);
+		  CloseHandle(pi.hProcess);
+	  } else {
+		  return -2;
+	  }
+	  ExitProcess(0);
+  }
+
+  
   // freopen stdout stdin to nul
   // close console window
   if (!freopen("nul", "w+b", stdout)) {
@@ -201,9 +224,9 @@ int Daemonize(const std::string &pidfile) {
   if (!freopen("nul", "r+b", stdin)) {
     return -1;
   }
-  if (FreeConsole() == FALSE) {
-	  return -1;
-  }
+  //if (FreeConsole() == FALSE) {
+	 // return -1;
+  //}
   if (write_pid(pidfile.c_str())) {
     return 0;
   }
@@ -330,7 +353,7 @@ bool DaemonRestart(const std::string &pidFile) {
   ZeroMemory(&si, sizeof(si));
   si.cb = sizeof(si);
   si.dwFlags = STARTF_USESHOWWINDOW;
-  si.wShowWindow = SW_SHOWDEFAULT;
+  si.wShowWindow = SW_HIDE;
   BOOL result = CreateProcessW(NULL, cmdlineBuffer, NULL, NULL, TRUE,
                                CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi);
   if (result) {

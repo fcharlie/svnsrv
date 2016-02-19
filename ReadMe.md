@@ -15,7 +15,7 @@ sudo apt-get install libboost-dev libboost-system-dev libboost-thread-dev
 >cd src && make
 
 ###Windows 8.1 或以上版本
-如果安装有 Visual Studio 2013 或者 2015 (建议社区版) 进入 src/msbuild ，双击 svnsrv.sln ，选择菜单 运行即可。
+如果安装有 Visual Studio 2013 或者 2015 (建议社区版) 进入 src/msbuild ，双击 svnsrv.sln ，选择菜单 build 即可。
 
 也可以在 powershell 中运行 build.ps1
 

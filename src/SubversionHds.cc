@@ -71,7 +71,7 @@ int ParseSubversionHds(char *buffer, std::size_t nbytes, SubversionHds &hds) {
       }
       continue;
     case 0:
-      hds.lastError.assign("Malformed Network data");
+      hds.lastError.assign("Malformed Network data !");
       return 2;
     default:
       break;

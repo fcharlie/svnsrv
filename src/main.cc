@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
                  GetCurrentProcessId());
     klogger::FileFlush();
     if (!DaemonWait(argc, argv, launcherArgs.crashRestart)) {
-      klogger::Log(klogger::kError, "cannot create watcher process!");
+      klogger::Log(klogger::kError, "cannot create watcher process !");
       return -1;
     }
   } else {

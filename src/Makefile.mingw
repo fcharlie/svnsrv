@@ -10,9 +10,9 @@ BUILDTYPE?=Debug
 
 ifeq ($(CXX),clang++)
 CXXFLAGS= -std=c++11 -g -Wall  -Wunused-variable -pedantic -Weffc++ -Wno-gnu-anonymous-struct \
--Wno-unused-local-typedef -Wno-c99-extensions 
+-Wno-unused-local-typedef -Wno-c99-extensions
 else
-CXXFLAGS= -std=c++11 -g -Wall  -Wunused-variable 
+CXXFLAGS= -std=c++11 -g -Wall  -Wunused-variable
 endif
 CFLAGS= -g -Wunused-variable -Wimplicit-function-declaration
 
@@ -33,7 +33,7 @@ $(PROJECTNAME): $(OBJECTS) svnsrv.res
 
 svnsrv.res:msbuild/svnsrv.rc
 	$(RC) -c 65001 $< -O coff -o $@
-	
+
 $(OBJECTS):%.o:%.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
@@ -44,4 +44,4 @@ install:$(PROJECTNAME) ../config/svnsrv.toml ../config/router.toml
 
 
 clean:
-	rm *res *.o *.exe
+	rm *.res *.o *.exe

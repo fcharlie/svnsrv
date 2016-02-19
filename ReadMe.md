@@ -14,10 +14,16 @@ sudo apt-get install libboost-dev libboost-system-dev libboost-thread-dev
 编译    
 >cd src && make
 
-###Windows 7 以上版本
+###Windows 8.1 或以上版本
 如果安装有 Visual Studio 2013 或者 2015 (建议社区版) 进入 src/msbuild ，双击 svnsrv.sln ，选择菜单 运行即可。
 
 也可以在 powershell 中运行 build.ps1
+
+svnsrv 亦支持 MSYS2 -Mingw64 编译，安装 [MSYS2](https://sourceforge.net/projects/msys2)   使用 pacman 安装 mingw64 和 boost   
+
+然后运行：   
+>make -f Makefile.mingw
+
 
 ##设置路由
 Gitlab 类似的代码托管系统使用的是 Magic Path 划分用户，也就是使用用户用户名的前2个 ANSII 字符。我们可以将用户名转化为 16 bit 长的数字从而转变为区间。           

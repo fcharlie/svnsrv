@@ -11,7 +11,7 @@
 #include <chrono>
 #include "klog.h"
 #include "Runtime.hpp"
-#define __STDC_FORMAT_MACROS  
+#define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
 using namespace klogger;
@@ -40,12 +40,24 @@ Klogger::~Klogger() {
 
 size_t Klogger::writerAccess(const char *buffer, size_t size) {
   std::lock_guard<std::mutex> lock(mtxE);
+#ifdef _WIN32
+  auto l = fwrite(buffer, 1, size, logAccess);
+  fflush(logAccess);
+  return l;
+#else
   return fwrite(buffer, 1, size, logAccess);
+#endif
 }
 
 size_t Klogger::writerError(const char *buffer, size_t size) {
   std::lock_guard<std::mutex> lock(mtxE);
+#ifdef _WIN32
+  auto l = fwrite(buffer, 1, size, logError);
+  fflush(logError);
+  return l;
+#else
   return fwrite(buffer, 1, size, logError);
+#endif
 }
 
 bool Klogger::init(const char *infoFile, const char *errorFile) {
@@ -74,7 +86,7 @@ void Klogger::destroy(const char *msg) {
       std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   auto tm = std::localtime(&t);
   auto len =
-	  snprintf(buffer, 4096, "[Info] Process: %d Thread: %" PRIu64 " Time: "
+      snprintf(buffer, 4096, "[Info] Process: %d Thread: %" PRIu64 " Time: "
                              "%d/%02d/%02d %s %02d:%02d:%02d %s\n",
                (int)id, tid, (1900 + tm->tm_year), tm->tm_mon + 1, tm->tm_mday,
                wday[tm->tm_wday], tm->tm_hour, tm->tm_min, tm->tm_sec, msg);
@@ -115,11 +127,11 @@ void Klogger::log(KloggerLevel level, const char *fmt, ...) {
   auto t =
       std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   auto tm = std::localtime(&t);
-  auto len = snprintf(
-      buffer, 4095,
-	  "[%s] Process: %d Thread: %" PRIu64 " Time: %d/%02d/%02d %s %02d:%02d:%02d ",
-      leveMessage[level], (int)id, tid, (1900 + tm->tm_year), tm->tm_mon + 1,
-      tm->tm_mday, wday[tm->tm_wday], tm->tm_hour, tm->tm_min, tm->tm_sec);
+  auto len = snprintf(buffer, 4095, "[%s] Process: %d Thread: %" PRIu64
+                                    " Time: %d/%02d/%02d %s %02d:%02d:%02d ",
+                      leveMessage[level], (int)id, tid, (1900 + tm->tm_year),
+                      tm->tm_mon + 1, tm->tm_mday, wday[tm->tm_wday],
+                      tm->tm_hour, tm->tm_min, tm->tm_sec);
   char *p = buffer + len;
   size_t l = 4095 - len;
   va_list ap;

@@ -41,7 +41,7 @@ void SubversionSession::stop() {
 }
 
 void SubversionSession::start() {
-  socket_.set_option(boost::asio::ip::tcp::no_delay(false));
+  socket_.set_option(boost::asio::ip::tcp::no_delay(true));
   const char mbuffer[] =
       "( success ( 2 2 ( ) ( edit-pipeline svndiff1 absent-entries "
       "depth inherited-props log-revprops ) ) ) ";

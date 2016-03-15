@@ -37,7 +37,7 @@
 #include <string>
 
 bool GetProcessImageFileFolder(std::string &dir);
-bool PathCombineHomeExists(std::string path, const char *relativePath);
+bool PathCombineHomeExists(std::string &path, const char *relativePath);
 bool PathFileIsExists(const std::string &path);
 
 #endif

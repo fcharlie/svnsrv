@@ -101,7 +101,7 @@ bool PathFileIsExists(const std::string &path) {
 // KNOWNFOLDERID
 // https://msdn.microsoft.com/en-us/library/windows/desktop/dd378457.aspx
 
-bool PathCombineHomeExists(std::string path, const char *relativePath) {
+bool PathCombineHomeExists(std::string &path, const char *relativePath) {
   if (relativePath == nullptr)
     return false;
 #ifdef _MSC_VER

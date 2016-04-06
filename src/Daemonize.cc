@@ -5,15 +5,16 @@
 * Date: 2015.11
 * Copyright (C) 2016. OSChina.NET. All Rights Reserved.
 */
+#include <cstdarg>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
-#include <cstdint>
-#include <cstdarg>
 #include <cstring>
 #include <string>
 #include <vector>
-#include "klog.h"
+////
 #include "Daemonize.h"
+#include "klog.h"
 #if defined(_WIN32)
 #include "daemonize_win.inl"
 #elif defined(__linux__)

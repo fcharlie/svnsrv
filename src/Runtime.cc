@@ -9,8 +9,8 @@
 #include <cstdint>
 
 #ifdef _WIN32
-#include <Windows.h>
 #include <Shlwapi.h>
+#include <Windows.h>
 // Shlwapi.lib
 // Shlwapi.dll
 #include <Shlobj.h>
@@ -106,7 +106,7 @@ bool PathCombineHomeExists(std::string &path, const char *relativePath) {
     return false;
 #ifdef _MSC_VER
   wchar_t *pszBuffer = nullptr;
-  //USERPROFILE
+  // USERPROFILE
   if (SHGetKnownFolderPath(FOLDERID_Profile, 0, NULL, &pszBuffer) != S_OK) {
     perror("SHGetKnownFolderPath cannot resolve user home !");
     return false;
@@ -115,7 +115,7 @@ bool PathCombineHomeExists(std::string &path, const char *relativePath) {
   path = ca.Get();
   CoTaskMemFree(pszBuffer);
 #else
-  path=getenv("USERPROFILE");
+  path = getenv("USERPROFILE");
 #endif
   if (path.back() != '\\') {
     path.push_back('\\');
@@ -129,15 +129,15 @@ bool PathCombineHomeExists(std::string &path, const char *relativePath) {
 
 #else
 //// unix
+#include <dirent.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <unistd.h>
 #include <string.h>
-#include <pwd.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
 #endif
@@ -223,7 +223,7 @@ bool PathFileIsExists(const std::string &path) {
     return false;
   return true;
 }
-bool PathCombineHomeExists(std::string path, const char *relativePath) {
+bool PathCombineHomeExists(std::string &path, const char *relativePath) {
   if (relativePath == nullptr)
     return false;
   // char buffer[PATH_MAX] = {0};

@@ -5,13 +5,14 @@
 * Date: 2016.02
 * Copyright (C) 2016. OSChina.NET. All Rights Reserved.
 */
-#include <unistd.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <sys/prctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <sys/prctl.h>
-#include <signal.h>
-#include <fcntl.h>
+#include <unistd.h>
+///
 #include "ProcessTitle.hpp"
 
 /// cache pidfile ,use RAII
@@ -162,7 +163,7 @@ void SignalDaemonKill(int sig) {
     klogger::Destroy("svnsrv master shutdown");
     break;
   }
-  _exit(0);
+  exit(0);
 }
 
 /*
@@ -170,7 +171,7 @@ void SignalDaemonKill(int sig) {
 */
 void ForegroundShutdown(int sig) {
   klogger::Destroy("svnsrv shutdown");
-  _exit(0);
+  exit(0);
 }
 
 /*

@@ -12,6 +12,8 @@
 #include <string>
 #include <mutex>
 
+#define MAX_LINE_NUMBER 50000
+
 namespace klogger {
 enum KloggerLevel {
   kDebug = 0, /// Debug
@@ -23,6 +25,7 @@ enum KloggerLevel {
 
 class Klogger {
 private:
+  Klogger();
   // pid_t id;
   std::mutex mtxA;
   std::mutex mtxE;
@@ -30,7 +33,10 @@ private:
   std::string errorFile_;
   FILE *logAccess = stdout;
   FILE *logError = stdout;
-  Klogger();
+  uint32_t accessCounts = 0;
+  uint32_t errorCounts = 0;
+  bool RollingFileA();
+  bool RollingFileE();
   size_t writerAccess(const char *buffer, size_t size);
   size_t writerError(const char *buffer, size_t size);
 

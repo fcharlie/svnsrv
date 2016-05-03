@@ -38,8 +38,50 @@ Klogger::~Klogger() {
   }
 }
 
+bool Klogger::RollingFileA() {
+  if (logAccess != stdout && logAccess) {
+    fclose(logAccess);
+    auto t =
+        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    auto tm = std::localtime(&t);
+    char newname[4096];
+    snprintf(newname, 4096, "%s.%d-%d-%d+%d.%d", infoFile_.data(),
+             tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_yday, tm->tm_hour,
+             tm->tm_min);
+    // auto newname = infoFile_ + std::to_string();
+    // rename(infoFile_.data(), const char *__new)
+    rename(infoFile_.data(), newname);
+    logAccess = fopen(infoFile_.data(), "a+");
+    if (logAccess == nullptr)
+      logAccess = stdout;
+  }
+  return true;
+}
+bool Klogger::RollingFileE() {
+  if (logError != stderr && logError) {
+    fclose(logError);
+    auto t =
+        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    auto tm = std::localtime(&t);
+    char newname[4096];
+    snprintf(newname, 4096, "%s.%d-%d-%d+%d.%d", errorFile_.data(),
+             tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_yday, tm->tm_hour,
+             tm->tm_min);
+    // auto newname = infoFile_ + std::to_string();
+    // rename(infoFile_.data(), const char *__new)
+    rename(errorFile_.data(), newname);
+    logError = fopen(errorFile_.data(), "a+");
+    if (logError == nullptr)
+      logError = stdout;
+  }
+  return true;
+}
+
 size_t Klogger::writerAccess(const char *buffer, size_t size) {
   std::lock_guard<std::mutex> lock(mtxE);
+  if (accessCounts >= MAX_LINE_NUMBER)
+    this->RollingFileA();
+  accessCounts++;
 #ifdef _WIN32
   auto l = fwrite(buffer, 1, size, logAccess);
   fflush(logAccess);
@@ -51,6 +93,9 @@ size_t Klogger::writerAccess(const char *buffer, size_t size) {
 
 size_t Klogger::writerError(const char *buffer, size_t size) {
   std::lock_guard<std::mutex> lock(mtxE);
+  if (errorCounts >= MAX_LINE_NUMBER)
+    this->RollingFileE();
+  errorCounts++;
 #ifdef _WIN32
   auto l = fwrite(buffer, 1, size, logError);
   fflush(logError);

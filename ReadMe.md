@@ -1,4 +1,5 @@
-#svnsrv
+# svnsrv
+
 svnsrv 是 Subversion Protocol Dynamic Proxy Server (基于 svn 协议的动态代理服务器)，通过对用户请求的解析，
 得到资源目标的机器，即时与资源服务器建立连接，实现客户端与资源服务器的数据交换。
 
@@ -6,7 +7,8 @@ svnsrv 是 Subversion Protocol Dynamic Proxy Server (基于 svn 协议的动态�
 svnsrv 运行在 linux 或者 Windows 上， 依赖 Boost ，使用 C++ 11 编译器。  
 在 linux 上，你必须要安装 GCC 4.8 或者是 clang 3.6 更高的版本，在 Windows 上，需要 Visual Studio 2013 或者更高版本。   
 
-###Ubuntu 15.10     
+### Ubuntu
+
 安装依赖      
 ```sh
 sudo apt-get install libboost-dev libboost-system-dev libboost-thread-dev
@@ -14,7 +16,8 @@ sudo apt-get install libboost-dev libboost-system-dev libboost-thread-dev
 编译    
 >cd src && make
 
-###Windows 8.1 或以上版本
+### Windows 8.1 或以上版本
+
 如果安装有 Visual Studio 2013 或者 2015 (建议社区版) 进入 src/msbuild ，双击 svnsrv.sln ，选择菜单 build 即可。
 
 也可以在 powershell 中运行 build.ps1
@@ -25,7 +28,8 @@ svnsrv 亦支持 MSYS2 -Mingw64 编译，安装 [MSYS2](https://sourceforge.net/
 >make -f Makefile.mingw
 
 
-##设置路由
+## 设置路由
+
 Gitlab 类似的代码托管系统使用的是 Magic Path 划分用户，也就是使用用户用户名的前2个 ANSII 字符。我们可以将用户名转化为 16 bit 长的数字从而转变为区间。           
 一般而言，路由表的格式如下：          
 ```toml
@@ -64,7 +68,8 @@ Host.Content 是数组，如果为空，将使用默认的存储机器和端口�
 
 用户 magic path 如果无法匹配所有区间，那么将选择默认的地址也就是 Host 下的 address.         
 
-##运行
+## 运行
+
 在运行 svnsrv 前，先得设置号 svnsrv.toml 配置文件，svnsrv.toml 搜索路径为进程所在目录，Home 目录下的 .svnsrv/ 。    
 svnsrv 配置文件：   
 ```toml
@@ -129,6 +134,7 @@ OPTIONS:
 重启守护进程：   
 >svnsrv -s restart
 
-##许可协议
+## 许可协议
+
 svnsrv 作者 Force Charlie, 许可协议为 MIT       
-© 2016. OSChina.NET. All Rights Reserved.    
+© 2017. GITEE.COM. All Rights Reserved.    
